@@ -25,6 +25,37 @@ by extracting more, but by making the extraction verifiable.
    scored against a 20-document hand-labeled gold set, with field-level and
    derived-date accuracy reported separately.
 
+## Field List
+
+The ~18 fields from Goal 1, locked in when `lib/pipeline/extract.ts` needed a
+fixed target (was an open question in `progress-tracker.md`; resolved here
+per `ai-workflow-rules.md`'s "field list ambiguity goes in
+project-overview.md"). Canonical definitions live in `lib/pipeline/fields.ts`.
+18 fields across the six field groups `architecture.md`'s schema already
+fixes (`extractions.field_group`):
+
+- **parties_premises** (4): landlord name, tenant name, premises address,
+  rentable square feet.
+- **term** (3): commencement date, expiration date, initial term length.
+- **rent_escalation** (3): base rent, escalation type, escalation schedule.
+- **options_notice** (2): renewal option terms, renewal notice deadline —
+  the two fields critical-date derivation (Goal 2) will need for renewal
+  notice windows.
+- **expenses** (2): expense structure (NNN/gross/base-year/etc.), security
+  deposit.
+- **risk_clauses** (4): early termination right, co-tenancy clause,
+  assignment/subletting consent, percentage rent clause — one field per
+  risk flag Goal 2 names by name ("early termination, co-tenancy,
+  assignment consent, percentage rent"), so each flag has an unambiguous
+  source field rather than needing to be inferred from free text.
+
+Deliberately excluded from v1 (cut to hit ~18, not a scope statement about
+future work): rent commencement date if distinct from lease commencement,
+CAM expense caps as a field separate from expense structure, and any
+risk clause beyond the four Goal 2 already names. Add fields here, not
+silently in `lib/pipeline/fields.ts`, if that changes — this list is what
+gold-labeling targets.
+
 ## Core User Flow
 
 1. User opens the app; a set of seeded lease PDFs (from the fixtures directory)

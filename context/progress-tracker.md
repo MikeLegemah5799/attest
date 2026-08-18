@@ -132,6 +132,67 @@ Update this file after every meaningful implementation change.
   fixture-seeding step exists (see Next Up). `npm run build`, `npm run lint`,
   and `npx tsc --noEmit` all pass; ingest's test suite is idempotent
   (re-runnable without manual cleanup).
+- Extract, verify, and persist (stages 2–4/6) implemented for real, each
+  verified against `eloan-metro-square-jacksonville.pdf` before the next
+  started, per the scoping rules.
+  - **Field list resolved** (was an open question) — see
+    `project-overview.md`'s new "Field List" section and
+    `lib/pipeline/fields.ts`, the single source of truth for the 18 field
+    specs (key, group, label, description) both `extract.ts`'s prompts and
+    any future gold-labeling/UI code should read from.
+  - **`extract.ts`**: two-pass Claude extraction exactly as
+    architecture.md describes — a routing pass (`effort: "medium"`, cheaper
+    since it's coarse page→group classification) maps pages to the six
+    field groups from condensed per-page previews, then one targeted pass
+    per group (`effort: "high"`, only called for groups routing actually
+    found pages for) extracts that group's fields from only its routed
+    pages' full text. All Claude calls use `client.messages.parse()` +
+    `zodOutputFormat` (code-standards.md — parsed and validated before
+    treated as structured data); a field the model marks `found: false`,
+    or whose returned page number isn't one of the pages it was actually
+    shown (a hallucination guard), is dropped rather than persisted.
+  - **`verify.ts`**: grounding check first (invariant 1) via
+    `lib/pdf/findEvidenceRects` — re-opens the source PDF (`loadPdf`) for
+    positioned text items rather than reading the ingest text cache, since
+    bounding boxes need geometry the plain-text cache doesn't carry; added
+    `filePath` to `VerifyInput` for this (mirrors `IngestInput`, wasn't in
+    the original stub). Only grounded fields go to the verifier — a single
+    batched Claude call judging all of them at once (not one call per
+    field) — so an ungrounded field never costs an LLM call it can't
+    possibly pass. **Confidence threshold resolved** (was an open
+    question, which explicitly called for "start with a rough cutoff,
+    recalibrate once the signals are running against real fixtures") at
+    `0.7`, local to `verify.ts`. Status derivation: ungrounded → `blocked`;
+    grounded + verifier-rejected → `blocked`; grounded + confirmed + below
+    threshold → `review`; grounded + confirmed + at/above threshold →
+    `grounded`.
+  - **`persist.ts`**: straightforward — maps `VerifiedField[]` to
+    `NewExtraction` rows via the already-implemented
+    `insertExtractions`, marks the document `verified`.
+  - **Self-consistency scoring is deliberately not implemented** — it was
+    already flagged as possibly-cut in Open Questions, `VerifiedField` and
+    the `extractions` schema have no field for it, and it's a distinct
+    trust signal from grounding/verifier (both landed here). Left as an
+    explicit gap, not silently dropped — see Open Questions.
+  - **Model**: `claude-opus-5` for every call (routing, extraction,
+    verifier) — accuracy-sensitive, and this is demo-scale volume, not a
+    cost-sensitive production workload.
+  - Unit-tested with a mocked Anthropic client — `extract.test.ts` (routing
+    → targeted dispatch, found:false and hallucinated-page-number
+    filtering), `verify.test.ts` (real grounding against the real fixture,
+    all four status-derivation branches, verifier batching), `persist.test.ts`
+    (real DB, immutability across two `runId`s) — 19 Vitest tests total, all
+    passing, no live API calls in the default suite.
+  - **Live end-to-end run** against the real fixture (not just mocked):
+    11 of 18 fields found, all 11 grounded, all 11 verifier-confirmed, one
+    correctly routed to `review` (the model honestly reported the renewal
+    option's specific terms weren't stated on the pages it saw, at
+    confidence 0.4) — the review-queue behavior worked exactly as designed
+    on a real low-confidence case, not just a synthetic one. Persisted rows
+    carry real computed bounding boxes. Cleaned up the live-check
+    document/rows/cache afterward — this was a one-off verification run,
+    not seed data. `npm run build`, `npm run lint`, `npx tsc --noEmit` all
+    pass.
 
 ## In Progress
 
@@ -140,35 +201,27 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. Extract → verify → persist stages, in that order, each landed and
-   verified against one fixture before the next starts (per the scoping
-   rules in ai-workflow-rules.md). Verify can now call `findEvidenceRects`
-   for real.
-2. `lib/dates/` derivation engine (pure functions, Vitest-covered),
+1. `lib/dates/` derivation engine (pure functions, Vitest-covered),
    replacing the hardcoded tracker/timeline/risk-flag data the UI currently
    renders.
-3. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
+2. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
    `documents` row) — ingest assumes the row already exists, and nothing
    creates it yet; needed before the real pipeline can run against the
    full starter set or the UI can rewire off mock data.
-4. Rewire the four existing screens from mock arrays
+3. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
    `lib/db` queries, and replace the doc-viewer skeleton with a real
    `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-5. Only once the pipeline is stable end to end: `evals/` harness against the
+4. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
 ## Open Questions
 
-- Exact field list per field group (parties, term, rent & escalation,
-  options & notice, expenses, risk clauses) — need to lock the ~18 fields
-  before writing extraction prompts, so gold-labeling has a fixed target.
-- Confidence threshold for the review queue — start with a rough cutoff,
-  recalibrate once the grounding/verifier/consistency signals are running
-  against real fixtures.
 - Whether self-consistency (3 runs at temp > 0) is affordable time-wise on
   all 6 date-feeding fields, or whether it needs to shrink to fewer fields
-  under the two-day budget.
+  under the two-day budget — grounding and verifier are implemented
+  (`lib/pipeline/verify.ts`); self-consistency is the one trust-layer
+  signal from project-overview.md still unbuilt.
 - How many gold-labeled documents are realistic to hand-label by Wednesday —
   20 is the target from project-overview.md, but this is the most likely
   scope to trim if time runs short.
@@ -259,6 +312,28 @@ Update this file after every meaningful implementation change.
   defensive guess); the font-size scale lives in the transform matrix, not
   reliably in the `height` field. Without this, every text item on a normal
   horizontal-text page would produce a zero-height, invisible highlight rect.
+- **`claude-opus-5` for every extraction/verify call, no cost-tiering** —
+  accuracy-sensitive, demo-scale volume (a handful of documents, not
+  production traffic), so there's no cost pressure that would justify
+  trading accuracy for a cheaper model.
+- **Confidence threshold: `0.7`** — resolved the open question with the
+  rough-cutoff-now, recalibrate-later approach it explicitly called for.
+  Local to `lib/pipeline/verify.ts`; recalibrate once more fixtures have
+  run through it and there's a sense of what confidence values the model
+  actually produces on genuinely ambiguous fields.
+- **Verify re-derives positioned text items from the source PDF instead of
+  reading the ingest text cache** — the text cache (`pages.text_cache_path`)
+  only holds plain text; grounding needs `PdfTextItem`s with geometry to
+  compute bounding boxes, which only `lib/pdf/getPageText` produces from an
+  open `PdfHandle`. Added `filePath` to `VerifyInput` (mirrors
+  `IngestInput`) rather than reconstructing a `fixtures/leases/` path
+  inside `lib/pipeline/`, keeping that stage agnostic of where source PDFs
+  actually live.
+- **Verifier pass batches all grounded fields into one Claude call, not one
+  call per field** — a field's evidence is already confirmed to appear
+  verbatim on the page (the grounding check ran first); the verifier is
+  only judging support, so there's no reason to pay for up to 18 separate
+  round trips when one prompt listing every claim does the same job.
 
 ## Session Notes
 
