@@ -20,7 +20,13 @@ export type FieldGroup =
   | "expenses"
   | "risk_clauses";
 
-/** A rectangle in PDF page coordinates, used for source-span highlighting. */
+/**
+ * A rectangle in PDF page coordinates, used for source-span highlighting.
+ * Units are PDF points (1/72in) at scale 1, top-left origin — the same
+ * space pdf.js's own PageViewport produces at `{ scale: 1 }`, so a
+ * client-side viewer just multiplies by its own render scale, no
+ * additional flip or origin conversion.
+ */
 export type BoundingBox = {
   x: number;
   y: number;

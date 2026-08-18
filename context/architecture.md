@@ -24,6 +24,7 @@
 
 - **SQLite (via Drizzle)**: all structured state — document metadata, page text index, extractions (value, evidence text, page, bbox, confidence, `run_id`, `prompt_version`), derived dates, risk flags, gold labels, eval run results. This is the single source of truth; the eval harness and the app read the same tables.
 - **Filesystem (`fixtures/`)**: source lease PDFs and the 20-document gold set, seeded into the repo. Nothing is uploaded at runtime in the demo — documents are loaded from fixtures on startup.
+- **Filesystem (page text cache)**: each page's extracted text, written by the ingest stage (not `lib/pdf/` itself, which stays I/O-free beyond reading the source PDF) to `<PAGE_TEXT_CACHE_DIR>/<document_id>/<page_number>.txt`, default `./cache/pages`. `pages.text_cache_path` in SQLite points here — see Invariants and code-standards.md's "not persisted as a giant text column."
 
 ## Auth and Access Model
 

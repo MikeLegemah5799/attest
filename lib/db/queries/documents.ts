@@ -25,3 +25,12 @@ export function updateDocumentStatus(id: string, status: Document["status"]): Do
     .returning()
     .get();
 }
+
+export function markDocumentIngested(id: string, pageCount: number): Document {
+  return db
+    .update(documents)
+    .set({ status: "ingested", pageCount })
+    .where(eq(documents.id, id))
+    .returning()
+    .get();
+}

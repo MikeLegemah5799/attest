@@ -33,6 +33,14 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local dev database and page-text cache — not yet the deliberately seeded,
+# demo-ready state architecture.md's storage model describes; committed once
+# a real fixture-seeding step exists (progress-tracker.md Next Up)
+/attest.db
+/attest.db-shm
+/attest.db-wal
+/cache/
+
 # vercel
 .vercel
 
