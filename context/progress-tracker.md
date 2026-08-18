@@ -98,6 +98,22 @@ Update this file after every meaningful implementation change.
   OCR, whole-filing PDF copies, etc.). The full 20-doc gold set
   (`fixtures/gold/`) is unaffected — this was scoped as the starter set only,
   per `project-overview.md`.
+- `lib/pdf/` implemented for real against pdfjs-dist's Node ("legacy") build
+  — `loadPdf` opens a fixture PDF (the pdfjs `PDFDocumentProxy` is tracked in
+  a module-private `WeakMap` keyed by the returned `PdfHandle`, so no
+  pdfjs-dist type leaks past this module per code-standards.md); `getPageText`
+  returns a page's full text plus positioned `PdfTextItem`s; `findEvidenceRects`
+  is a pure function doing the grounding-check string match (invariant 1),
+  tolerant of whitespace differences between quoted evidence and how pdf.js
+  joins text runs, returning one merged rect per matched visual line. Verified
+  end to end against the real `eloan-metro-square-jacksonville.pdf` fixture
+  (52 pages, real extracted text, real grounded/ungrounded matches), plus a
+  synthetic unit suite for `findEvidenceRects` — 10 Vitest tests total, all
+  passing. `npm run build`, `npm run lint`, and `npx tsc --noEmit` all pass.
+  Known limitation, not solved in this pass: a word hyphenated across a line
+  wrap in the source PDF won't match evidence text that spells it without the
+  break, since pdf.js reports the hyphen as an ordinary character with no
+  dehyphenation signal.
 
 ## In Progress
 
@@ -106,21 +122,21 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. Implement `lib/pdf/` for real — typed wrapper around `pdfjs-dist` for
-   text + coordinate extraction (currently a typed stub only).
-2. Build the ingest stage and confirm it runs cleanly against one fixture
-   lease.
-3. Extract → verify → persist stages, in that order, each landed and
+1. Build the ingest stage and confirm it runs cleanly against one fixture
+   lease — loads it via `lib/pdf/`, caches each page's text to disk, writes
+   the `pages` text index.
+2. Extract → verify → persist stages, in that order, each landed and
    verified against one fixture before the next starts (per the scoping
-   rules in ai-workflow-rules.md).
-4. `lib/dates/` derivation engine (pure functions, Vitest-covered),
+   rules in ai-workflow-rules.md). Verify can now call `findEvidenceRects`
+   for real.
+3. `lib/dates/` derivation engine (pure functions, Vitest-covered),
    replacing the hardcoded tracker/timeline/risk-flag data the UI currently
    renders.
-5. Rewire the four existing screens from mock arrays
+4. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
    `lib/db` queries, and replace the doc-viewer skeleton with a real
    `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-6. Only once the pipeline is stable end to end: `evals/` harness against the
+5. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
 ## Open Questions
@@ -202,6 +218,28 @@ Update this file after every meaningful implementation change.
   should let a reader guess the lease without opening `SOURCES.md`. Full
   provenance (filer, filing type/date, exhibit #, accession #, EDGAR URL)
   lives in `fixtures/leases/SOURCES.md` rather than encoded in the filename.
+- **`BoundingBox` is top-left origin, PDF points at scale 1** — not specified
+  anywhere before `lib/pdf/` needed it. Chosen because it's exactly what
+  pdf.js's own `PageViewport.convertToViewportPoint({ scale: 1 })` produces,
+  so `lib/pdf/` does no hand-rolled rotation/flip math and a client-side
+  viewer only has to multiply by its own render scale. Documented on the
+  type in `lib/types.ts` since it's shared across `lib/pipeline/`,
+  `lib/dates/`, and the UI.
+- **`pdfjs-dist` added to `next.config.ts`'s `serverExternalPackages`** —
+  Next 16's App Router bundles server-side imports by default (unlike the
+  Pages Router default most training data assumes); `better-sqlite3` and
+  `canvas` are already in Next's built-in externalized-packages list but
+  `pdfjs-dist` isn't, and its Node-specific `fs`/`process.getBuiltinModule`
+  calls (used by its legacy Node build) break under Turbopack/webpack
+  bundling if left in. Caught by reading `node_modules/next/dist/docs/`
+  per `AGENTS.md` before writing `lib/pdf/`, not by hitting the failure at
+  runtime.
+- **`PdfTextItem.height` falls back to `Math.hypot(transform[2], transform[3])`
+  when pdf.js reports `height: 0`** — a real, reproducible pdf.js behavior
+  for horizontal text (confirmed against the E-Loan fixture, not just a
+  defensive guess); the font-size scale lives in the transform matrix, not
+  reliably in the `height` field. Without this, every text item on a normal
+  horizontal-text page would produce a zero-height, invisible highlight rect.
 
 ## Session Notes
 
