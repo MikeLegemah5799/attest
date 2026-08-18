@@ -114,6 +114,24 @@ Update this file after every meaningful implementation change.
   wrap in the source PDF won't match evidence text that spells it without the
   break, since pdf.js reports the hyphen as an ordinary character with no
   dehyphenation signal.
+- Ingest stage (1/6) implemented for real: loads a fixture via `lib/pdf/`,
+  writes each page's text to `<PAGE_TEXT_CACHE_DIR>/<document_id>/<page>.txt`
+  (default `./cache/pages`), inserts the `pages` text-index rows, and marks
+  the document `ingested` with its real page count (added
+  `markDocumentIngested` to `lib/db/queries/documents.ts` — the schema had a
+  `page_count` column nothing wrote to yet). Verified end to end against
+  `eloan-metro-square-jacksonville.pdf`: all 52 pages ingested, cached, and
+  indexed, document status and page count correctly updated, cache files
+  contain real text. Ran `npm run db:migrate` to create the local `attest.db`
+  the test runs against. Added `vitest.config.mts` (was missing entirely —
+  no test before this one imported anything through the `@/` path alias, so
+  the gap was latent) to resolve `@/*`, matching `tsconfig.json`. `attest.db`,
+  its `-shm`/`-wal` files, and `cache/` are gitignored for now — this is
+  local dev/test state, not the deliberately seeded, demo-ready database
+  `architecture.md` describes; that gets committed once a real
+  fixture-seeding step exists (see Next Up). `npm run build`, `npm run lint`,
+  and `npx tsc --noEmit` all pass; ingest's test suite is idempotent
+  (re-runnable without manual cleanup).
 
 ## In Progress
 
@@ -122,16 +140,17 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. Build the ingest stage and confirm it runs cleanly against one fixture
-   lease — loads it via `lib/pdf/`, caches each page's text to disk, writes
-   the `pages` text index.
-2. Extract → verify → persist stages, in that order, each landed and
+1. Extract → verify → persist stages, in that order, each landed and
    verified against one fixture before the next starts (per the scoping
    rules in ai-workflow-rules.md). Verify can now call `findEvidenceRects`
    for real.
-3. `lib/dates/` derivation engine (pure functions, Vitest-covered),
+2. `lib/dates/` derivation engine (pure functions, Vitest-covered),
    replacing the hardcoded tracker/timeline/risk-flag data the UI currently
    renders.
+3. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
+   `documents` row) — ingest assumes the row already exists, and nothing
+   creates it yet; needed before the real pipeline can run against the
+   full starter set or the UI can rewire off mock data.
 4. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
    `lib/db` queries, and replace the doc-viewer skeleton with a real
