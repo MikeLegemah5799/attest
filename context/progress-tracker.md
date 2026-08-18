@@ -193,6 +193,51 @@ Update this file after every meaningful implementation change.
     document/rows/cache afterward — this was a one-off verification run,
     not seed data. `npm run build`, `npm run lint`, `npx tsc --noEmit` all
     pass.
+- `lib/dates/` derivation engine implemented — pure functions, no I/O, no
+  LLM calls (invariant 3), confirmed by construction since neither file
+  imports `lib/db` or `lib/pipeline`.
+  - **`criticalDates.ts`**: four date types. `commencement`/`expiration`
+    are direct pass-throughs of their extraction fields (parsed to ISO,
+    gated on `status === "grounded"` — invariant 2's "confidence
+    threshold" is read as verify's grounded/review/blocked status rather
+    than re-deriving from the raw `confidence` number a second time, so
+    the threshold lives in exactly one place). `renewal_notice_deadline`
+    is computed — expiration minus a notice period parsed out of the
+    `renewal_notice_deadline` field's free text (handles "(180) days" and
+    "180 days" phrasings) — and blocks with a specific reason if
+    expiration isn't resolved yet or the notice period can't be parsed.
+    `next_escalation` only computes a date for a recognized annual
+    cadence (regex on escalation_type/escalation_schedule text); anything
+    else — CPI-indexed, an explicit step schedule, whatever — blocks with
+    "cadence not recognized as annual" rather than guessing a date from a
+    format it can't actually interpret. This is a deliberate scope limit,
+    not full escalation-schedule parsing — logged in Open Questions.
+  - **`riskFlags.ts`**: one flag per `risk_clauses` field
+    (`lib/pipeline/fields.ts`), always all four regardless of what was
+    extracted. Surfaced a real tension worth recording: grounding
+    (invariant 1) only ever supports a *positive* claim — there's no
+    verbatim quote to cite for "this lease has no co-tenancy clause" — so
+    `extract.ts`'s `found: false` already conflates "confirmed absent"
+    with "not observed in the routed pages," and this derivation
+    inherits that. Resolved by treating anything not extracted, or that
+    failed grounding/verification, as `blocked` (not `present: false`
+    asserted as fact) — "extraction didn't find it" is never treated as
+    proof it isn't there. Real absence-detection would need `extract.ts`
+    to support a grounded negative claim, which it currently can't; noted
+    as a gap, not fixed here (out of scope — this session's task was
+    `lib/dates/`, not re-opening `extract.ts`).
+  - 16 Vitest tests (both files, every branch: grounded/review/blocked/
+    missing input, parseable/unparseable dates and notice periods,
+    recognized/unrecognized escalation cadence) — all passing. Full suite
+    now 35 tests. `npm run build`, `npm run lint`, `npx tsc --noEmit` all
+    pass.
+  - **Not implemented in this pass**: `lib/pipeline/derive.ts`, the
+    orchestration stage that would read persisted extractions via
+    `lib/db`, call these two functions, and write `derived_dates`/
+    `risk_flags` rows. That stage does I/O, which `lib/dates/` itself
+    must never do (invariant 3) — different system boundary, so kept as
+    its own increment per the scoping rules, same as extract/verify/
+    persist were each landed separately.
 
 ## In Progress
 
@@ -201,9 +246,9 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. `lib/dates/` derivation engine (pure functions, Vitest-covered),
-   replacing the hardcoded tracker/timeline/risk-flag data the UI currently
-   renders.
+1. `lib/pipeline/derive.ts` — wires `lib/dates/` to `lib/db`: load an
+   extraction run, call `deriveCriticalDates`/`deriveRiskFlags`, persist
+   the results to `derived_dates`/`risk_flags`.
 2. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
    `documents` row) — ingest assumes the row already exists, and nothing
    creates it yet; needed before the real pipeline can run against the
@@ -225,6 +270,20 @@ Update this file after every meaningful implementation change.
 - How many gold-labeled documents are realistic to hand-label by Wednesday —
   20 is the target from project-overview.md, but this is the most likely
   scope to trim if time runs short.
+- `lib/dates/criticalDates.ts` only computes `next_escalation` for a
+  recognized annual cadence — CPI-indexed schedules and explicit step
+  schedules (real formats seen in the fixtures) block instead of
+  computing. Worth revisiting if a fixture with a common non-annual
+  pattern turns up during gold-labeling, but not worth generalizing
+  against hypothetical formats first.
+- `extract.ts`'s `found: false` can't distinguish "this clause is
+  confirmed absent" from "not found in the routed pages" — grounding
+  can only cite evidence for a positive claim. `lib/dates/riskFlags.ts`
+  currently treats both the same way (`blocked`, not `present: false`).
+  A real fix would need `extract.ts` to support a grounded negative
+  claim (e.g. citing the section that would have contained the clause);
+  not attempted here since it's an `extract.ts` change, not a
+  `lib/dates/` one.
 
 ## Architecture Decisions
 
