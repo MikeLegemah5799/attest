@@ -1,8 +1,9 @@
 import { AlertTriangle, FileCheck, FileX, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { ConfidenceStatus } from "@/lib/types";
 
-export type ConfidenceStatus = "grounded" | "review" | "blocked" | "neutral";
+export type { ConfidenceStatus };
 
 const config: Record<ConfidenceStatus, { icon: typeof FileCheck; className: string; label: string }> = {
   grounded: {
