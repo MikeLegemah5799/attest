@@ -256,6 +256,30 @@ Update this file after every meaningful implementation change.
   absence. Full suite now 36 tests, all passing; cleaned up the live-check
   document/rows/cache afterward (throwaway verification, not seed data).
   `npm run build`, `npm run lint`, `npx tsc --noEmit` all pass.
+- Fixture-seeding step implemented — `lib/db/seed.ts` (`npm run db:seed`),
+  a hand-authored 10-entry manifest (slug, filename, title — titles pulled
+  from each lease's actual property/tenant per
+  `fixtures/leases/SOURCES.md`, not auto-generated from the filename
+  slug) registering each `fixtures/leases/*.pdf` as a `documents` row via
+  the already-implemented `insertDocument`. Idempotent (`getDocumentBySlug`
+  check before insert, so re-running skips what's already there) and
+  intentionally cheap — it only creates rows (`status: "pending"`), it does
+  not run the pipeline against them; that's still a separate, costly,
+  explicit step against real Claude calls for 10 documents, not something
+  to trigger as a side effect of seeding. Tested against the real db (all
+  10 register, idempotent re-run, and each manifest filename is checked to
+  actually exist on disk — catches drift between the manifest and
+  `fixtures/leases/`). Updated `README.md`'s "Running it" section, which
+  previously skipped straight to `npm run dev` as if the seeded database
+  already existed — added the `db:migrate`/`db:seed` steps and corrected
+  the claim that the app already runs "against the seeded SQLite
+  database" (it's still on mock UI data — see `surfacePrep` below). Full
+  suite now 38 tests, all passing. `npm run build`, `npm run lint`,
+  `npx tsc --noEmit` all pass. Ran `db:seed` for real against the local
+  `attest.db` after tests (which clean up their own seeded rows, same as
+  every other test in this codebase) — 10 documents now registered
+  locally, `status: "pending"` since the pipeline hasn't run against them
+  yet.
 
 ## In Progress
 
@@ -265,18 +289,14 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
-   `documents` row) — ingest assumes the row already exists, and nothing
-   creates it yet; needed before the real pipeline can run against the
-   full starter set or the UI can rewire off mock data.
-2. `lib/pipeline/surfacePrep.ts` (stage 6/6) — the last unimplemented
+1. `lib/pipeline/surfacePrep.ts` (stage 6/6) — the last unimplemented
    pipeline stage: loads a document's latest run (extractions, derived
    dates, risk flags) and shapes it for the review UI.
-3. Rewire the four existing screens from mock arrays
+2. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
    `lib/db` queries via `surfacePrep`, and replace the doc-viewer skeleton
    with a real `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-4. Only once the pipeline is stable end to end: `evals/` harness against the
+3. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
 ## Open Questions

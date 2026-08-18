@@ -130,12 +130,16 @@ the interface design.
  
 ```bash
 npm install
-npm run dev       # starts the app against the seeded SQLite database
+npm run db:migrate # creates attest.db from the Drizzle schema
+npm run db:seed    # registers the fixtures/leases/ starter set as documents
+npm run dev        # starts the app (still on mock UI data — see progress-tracker.md)
 npm run eval       # runs the gold-set evaluation and prints a scorecard
 ```
  
-No API key required to view seeded documents. An `ANTHROPIC_API_KEY` is
-needed only to run extraction against a new document.
+`db:seed` only registers each fixture as a `documents` row (fast, free, no
+API calls) — it doesn't run the extraction pipeline against them. An
+`ANTHROPIC_API_KEY` (in `.env` or exported) is needed to actually run
+extraction/verification against a document.
  
 ## Repo map
  
