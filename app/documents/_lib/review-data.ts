@@ -80,3 +80,58 @@ export const queueItems: QueueItem[] = [
   { field: "Co-tenancy clause", group: "Risk clauses", status: "review", page: "p.22" },
   { field: "Assignment consent", group: "Risk clauses", status: "review", page: "p.23" },
 ];
+
+export type CriticalDate = {
+  date: string;
+  label: string;
+  position: number;
+};
+
+export const timelineYears = [2024, 2025, 2026, 2027, 2028];
+
+export const criticalDates: CriticalDate[] = [
+  { date: "Jan 15", label: "Commencement", position: 0 },
+  { date: "Mar 14", label: "Expiration", position: 79 },
+];
+
+export const renewalNoticeCallout = {
+  title: "Renewal notice window",
+  body: "Blocked — commencement confidence too low to compute notice deadline",
+  position: 62,
+};
+
+export type RiskSeverity = "flag" | "neutral";
+
+export type RiskFlag = {
+  label: string;
+  severity: RiskSeverity;
+  detail: string;
+  source: string | null;
+};
+
+export const riskFlags: RiskFlag[] = [
+  {
+    label: "Co-tenancy clause",
+    severity: "flag",
+    detail: "Rent abatement if anchor tenant vacates",
+    source: "p.22",
+  },
+  {
+    label: "Assignment consent required",
+    severity: "flag",
+    detail: "Landlord consent required, not unreasonably withheld",
+    source: "p.23",
+  },
+  {
+    label: "No early termination",
+    severity: "neutral",
+    detail: "Standard fixed term",
+    source: "p.2",
+  },
+  {
+    label: "Percentage rent: none",
+    severity: "neutral",
+    detail: "Flat base rent structure",
+    source: null,
+  },
+];

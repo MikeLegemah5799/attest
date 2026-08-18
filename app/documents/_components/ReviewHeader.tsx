@@ -30,7 +30,7 @@ export function ReviewTabbar({
   queueCount,
 }: {
   slug: string;
-  active: "review" | "queue";
+  active: "review" | "queue" | "risk";
   queueCount: number;
 }) {
   return (
@@ -41,7 +41,9 @@ export function ReviewTabbar({
       <Link href={`/documents/${slug}/queue`} className={`tab${active === "queue" ? " active" : ""}`}>
         Review queue <span className="tab-count">{queueCount}</span>
       </Link>
-      <span className="tab">Critical dates &amp; risk</span>
+      <Link href={`/documents/${slug}/risk`} className={`tab${active === "risk" ? " active" : ""}`}>
+        Critical dates &amp; risk
+      </Link>
     </nav>
   );
 }

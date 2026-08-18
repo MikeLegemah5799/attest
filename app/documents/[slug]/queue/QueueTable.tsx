@@ -60,7 +60,7 @@ export function QueueTable({ slug, items }: { slug: string; items: QueueItem[] }
               </td>
               <td className="mono muted">{item.page}</td>
               <td className="queue-open">
-                <Link href={`/documents/${slug}`} className="row-link">
+                <Link href={`/documents/${slug}`} className="row-link link-open">
                   Open →
                 </Link>
               </td>
