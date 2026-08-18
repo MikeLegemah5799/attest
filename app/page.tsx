@@ -1,68 +1,128 @@
-import Image from "next/image";
+type Document = {
+  name: string;
+  type: string;
+  verifiedFilled: number;
+  verifiedTotal: number;
+  verifiedPercent: number;
+  flags: number;
+  expires: string;
+};
+
+const documents: Document[] = [
+  {
+    name: "123 Main St — Office",
+    type: "Office",
+    verifiedFilled: 3,
+    verifiedTotal: 5,
+    verifiedPercent: 82,
+    flags: 2,
+    expires: "Mar 2027",
+  },
+  {
+    name: "400 Park Ave — Suite 1200",
+    type: "Office",
+    verifiedFilled: 5,
+    verifiedTotal: 5,
+    verifiedPercent: 100,
+    flags: 0,
+    expires: "Nov 2028",
+  },
+  {
+    name: "Riverside Plaza — Bldg C",
+    type: "Office",
+    verifiedFilled: 2,
+    verifiedTotal: 5,
+    verifiedPercent: 44,
+    flags: 4,
+    expires: "Jun 2026",
+  },
+  {
+    name: "Harbor Point — Floor 3",
+    type: "Office",
+    verifiedFilled: 4,
+    verifiedTotal: 5,
+    verifiedPercent: 91,
+    flags: 1,
+    expires: "Aug 2029",
+  },
+];
+
+function VerifiedDots({ filled, total, percent }: { filled: number; total: number; percent: number }) {
+  return (
+    <span className="verify-badge">
+      <span className="dots">
+        {Array.from({ length: total }, (_, i) => (
+          <span key={i} className={i < filled ? "dot-filled" : "dot-empty"}>
+            ●
+          </span>
+        ))}
+      </span>
+      <span className="mono">{percent}%</span>
+    </span>
+  );
+}
+
+function FlagCount({ count }: { count: number }) {
+  if (count === 0) {
+    return <span className="muted">—</span>;
+  }
+  return (
+    <span className="flag-count">
+      <svg className="icon" viewBox="0 0 12 12" fill="none">
+        <path d="M6 1.5L11 10.5H1L6 1.5Z" fill="currentColor" />
+      </svg>
+      {count}
+    </span>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="shell">
+      <header className="topbar">
+        <div className="topbar-left">
+          <span className="wordmark">ATTEST</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      <main className="content">
+        <div className="page-header">
+          <h1 className="page-title">Documents</h1>
+          <button className="btn-import" type="button">
+            + Import
+          </button>
         </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Document</th>
+              <th>Type</th>
+              <th>Verified</th>
+              <th>Flags</th>
+              <th>Expires</th>
+            </tr>
+          </thead>
+          <tbody>
+            {documents.map((doc) => (
+              <tr key={doc.name}>
+                <td>{doc.name}</td>
+                <td>{doc.type}</td>
+                <td>
+                  <VerifiedDots
+                    filled={doc.verifiedFilled}
+                    total={doc.verifiedTotal}
+                    percent={doc.verifiedPercent}
+                  />
+                </td>
+                <td>
+                  <FlagCount count={doc.flags} />
+                </td>
+                <td className="muted">{doc.expires}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </main>
     </div>
   );
