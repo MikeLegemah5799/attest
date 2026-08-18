@@ -73,26 +73,31 @@ Update this file after every meaningful implementation change.
   `db:migrate`, `eval`, and `test` npm scripts. `npm run build`, `npm run
   lint`, and `npx tsc --noEmit` all pass; `npm run eval` and `npm run test`
   correctly fail (not-implemented / no tests yet) until their stages land.
-- `fixtures/leases/` seeded with a 5-document starter set of real commercial
-  office lease PDFs sourced from SEC EDGAR EX-10/EX-99 exhibits: E-Loan, Inc.
-  (Metro Square, Jacksonville FL), 8x8, Inc. (two distinct leases — Sunnyvale
-  CA and San Jose CA), Heritage Commerce Corp / Heritage Bank of Commerce
-  (Walnut Creek CA), and Tekelec (Morrisville NC). Each was downloaded
-  directly from `sec.gov` with a descriptive `User-Agent`, spot-checked as a
-  genuine, fully filled-in, standalone office lease (not an amendment stub,
-  sublease summary, or blank template), and verified via `pdftotext` to carry
-  a real embedded text layer (not a scanned image). Full provenance (filer,
-  filing type/date, exhibit number, accession number, exact EDGAR URL) is in
-  `fixtures/leases/SOURCES.md`, along with the rejected candidates and why
-  (non-office use, amendment-only, sublease, garbled OCR, whole-filing PDF
-  copies, etc.). Stopped at 5 rather than padding to 10: genuine
-  text-layer-PDF EX-10 office leases are rare on EDGAR (most exhibits are
-  filed as HTML) — a systematic full-text-search sweep across dozens of
-  phrase queries, form types, and years 2001–2019 found only a handful of
-  standalone-lease PDF exhibits total, and these 5 are the ones that were
-  real, office-use, non-amendment, non-template, and cleanly text-searchable.
-  The full 20-doc gold set (`fixtures/gold/`) is unaffected — this was
-  scoped as the starter set only, per `project-overview.md`.
+- `fixtures/leases/` seeded with a 10-document starter set of real commercial
+  office lease PDFs sourced from SEC EDGAR EX-10/EX-99 exhibits, with mixed
+  provenance: 5 were filed on EDGAR natively as PDF (E-Loan, Inc. — Metro
+  Square, Jacksonville FL; 8x8, Inc. — two distinct leases, Sunnyvale CA and
+  San Jose CA; Heritage Commerce Corp / Heritage Bank of Commerce — Walnut
+  Creek CA; Tekelec — Morrisville NC), and 5 more were filed on EDGAR only as
+  HTML and converted locally to PDF with headless Google Chrome
+  (`--print-to-pdf --no-pdf-header-footer`) once the native-PDF pool was
+  exhausted — genuine text-layer PDF EX-10 exhibits are rare on EDGAR, since
+  the vast majority of exhibits (including all 5 of these) are filed as HTML
+  (Radiant Systems, Inc. — Fort Worth TX; AVI Biopharma, Inc. — Bothell WA;
+  Federal Home Loan Bank of Seattle — Seattle WA; Circuit Research Labs, Inc.
+  — San Leandro CA; Entropic Communications, Inc. — San Diego CA). Every file,
+  regardless of provenance, was downloaded directly from `sec.gov` with a
+  descriptive `User-Agent`, spot-checked as a genuine, fully filled-in,
+  standalone office lease (not an amendment stub, sublease summary, or blank
+  template), and verified via `pdftotext` to carry a real, clean embedded text
+  layer (not a scanned image, not garbled OCR). Full provenance (filer, filing
+  type/date, exhibit number, accession number, exact EDGAR URL, and — for the
+  5 converted files — which tool did the HTML→PDF conversion) is in
+  `fixtures/leases/SOURCES.md`, along with the rejected candidates from both
+  search passes and why (non-office use, amendment-only, sublease, garbled
+  OCR, whole-filing PDF copies, etc.). The full 20-doc gold set
+  (`fixtures/gold/`) is unaffected — this was scoped as the starter set only,
+  per `project-overview.md`.
 
 ## In Progress
 
