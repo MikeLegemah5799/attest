@@ -280,23 +280,47 @@ Update this file after every meaningful implementation change.
   every other test in this codebase) — 10 documents now registered
   locally, `status: "pending"` since the pipeline hasn't run against them
   yet.
+- `lib/pipeline/surfacePrep.ts` (stage 6/6, the last unimplemented pipeline
+  stage) implemented — loads the latest run's extractions/derived dates/
+  risk flags via `lib/db`, then shapes them per its existing type contract:
+  `fieldSections` (extractions grouped by field group), `trackerCategories`
+  (`grounded`/`total` per group — `total` is the full 18-field spec count
+  from `lib/pipeline/fields.ts`, not just what got extracted, so a
+  half-extracted document shows real progress instead of 100%),
+  `queueItems` (fields with status `review` or `blocked` — the below-
+  threshold review queue), and `criticalDates`/`riskFlags` passed through
+  as-is. All four collections are sorted into a fixed canonical order
+  (field spec order for fields/queue, a hardcoded chronological order for
+  the 4 date types, spec-declaration order for the 4 risk flags) rather
+  than trusting SQLite row order, which isn't a guaranteed-stable contract
+  for this. Per the stage's own doc comment, this returns domain data
+  (`ExtractionField[]`, `DerivedDate[]`, `RiskFlag[]`) — it deliberately
+  does **not** try to match `app/documents/_lib/review-data.ts`'s
+  presentational mock shapes (formatted citation strings like `"p.1 ·
+  ..."`, timeline `position` percentages); that formatting is `app/`'s job
+  per the existing architecture, not derivation's.
+  Verified against a real-DB test (grouping, tracker counts against the
+  full spec, queue filtering, ordering — all asserted with fields
+  deliberately inserted out of canonical order, to prove sorting is real
+  and not just accidentally-correct insertion order) and a **live run of
+  the complete six-stage chain** against the real E-Loan fixture — every
+  stage, ingest through surfacePrep, in one pass. Full suite now 43 tests,
+  all passing. `npm run build`, `npm run lint`, `npx tsc --noEmit` all
+  pass. All six pipeline stages now have real implementations.
 
 ## In Progress
 
 - None — UI shell is paused pending the backend pipeline; the skeleton is
-  in place but no stage has real logic yet. All six pipeline stages now
-  have real implementations except `surfacePrep` (stage 6/6, UI shaping).
+  in place but no stage has real logic yet, even though every backend
+  stage behind it is now real. Next session should rewire the screens.
 
 ## Next Up
 
-1. `lib/pipeline/surfacePrep.ts` (stage 6/6) — the last unimplemented
-   pipeline stage: loads a document's latest run (extractions, derived
-   dates, risk flags) and shapes it for the review UI.
-2. Rewire the four existing screens from mock arrays
+1. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
    `lib/db` queries via `surfacePrep`, and replace the doc-viewer skeleton
    with a real `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-3. Only once the pipeline is stable end to end: `evals/` harness against the
+2. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
 ## Open Questions
