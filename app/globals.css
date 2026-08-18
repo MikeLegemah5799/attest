@@ -80,6 +80,7 @@ body{
   color: var(--text-muted);
   border-bottom: 2px solid transparent;
   display:flex; align-items:center; gap:6px;
+  text-decoration: none;
 }
 .tab.active{ color: var(--text-primary); font-weight:500; border-bottom-color: var(--accent-primary); }
 .tab-count{
@@ -201,3 +202,22 @@ tr:last-child td{ border-bottom:none; }
   font-family: var(--mono); color: var(--text-muted);
 }
 .tracker-dots{ letter-spacing: 2px; font-size: 11px; }
+
+/* Review queue */
+.filter-row{ display:flex; align-items:center; gap: 10px; margin-bottom: 16px; }
+.filter-label{ font-size: 13px; color: var(--text-muted); }
+.filter-chip{
+  font-family: var(--sans); font-size: 13px; font-weight:500;
+  padding: 7px 14px; border-radius: 6px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface); color: var(--text-primary);
+  cursor: pointer;
+}
+.filter-chip:hover{ background: var(--bg-base); }
+.filter-chip--active{
+  background: var(--text-primary); border-color: var(--text-primary); color: var(--bg-surface);
+}
+.filter-chip--active:hover{ background: var(--text-primary); }
+
+.queue-open{ text-align: right; }
+.queue-open .row-link{ color: var(--text-primary); font-weight: 500; }
