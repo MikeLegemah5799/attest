@@ -239,24 +239,43 @@ Update this file after every meaningful implementation change.
     its own increment per the scoping rules, same as extract/verify/
     persist were each landed separately.
 
+- `lib/pipeline/derive.ts` (stage 5/6) implemented — loads a run's
+  extraction rows via `listExtractionsForRun`, calls
+  `deriveCriticalDates`/`deriveRiskFlags`, persists both via the
+  already-implemented `insertDerivedDates`/`insertRiskFlags`, marks the
+  document `derived`. This is the thin I/O boundary the ADR at
+  `lib/dates/` landing already called for — no logic of its own beyond
+  wiring. Verified with a real-DB Vitest test (rows actually land in
+  `derived_dates`/`risk_flags`, not just returned in memory), plus a live
+  run of the full six-stage chain (ingest → extract → verify → persist →
+  derive) against the real E-Loan fixture: matches the earlier live
+  extract/verify run exactly — the three date fields that weren't
+  extracted on that fixture correctly block with specific reasons, the
+  one grounded risk field (`early_termination_right`) correctly shows
+  `present: true`, the other three correctly block rather than assert
+  absence. Full suite now 36 tests, all passing; cleaned up the live-check
+  document/rows/cache afterward (throwaway verification, not seed data).
+  `npm run build`, `npm run lint`, `npx tsc --noEmit` all pass.
+
 ## In Progress
 
 - None — UI shell is paused pending the backend pipeline; the skeleton is
-  in place but no stage has real logic yet.
+  in place but no stage has real logic yet. All six pipeline stages now
+  have real implementations except `surfacePrep` (stage 6/6, UI shaping).
 
 ## Next Up
 
-1. `lib/pipeline/derive.ts` — wires `lib/dates/` to `lib/db`: load an
-   extraction run, call `deriveCriticalDates`/`deriveRiskFlags`, persist
-   the results to `derived_dates`/`risk_flags`.
-2. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
+1. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
    `documents` row) — ingest assumes the row already exists, and nothing
    creates it yet; needed before the real pipeline can run against the
    full starter set or the UI can rewire off mock data.
+2. `lib/pipeline/surfacePrep.ts` (stage 6/6) — the last unimplemented
+   pipeline stage: loads a document's latest run (extractions, derived
+   dates, risk flags) and shapes it for the review UI.
 3. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
-   `lib/db` queries, and replace the doc-viewer skeleton with a real
-   `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
+   `lib/db` queries via `surfacePrep`, and replace the doc-viewer skeleton
+   with a real `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
 4. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
