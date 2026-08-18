@@ -1,21 +1,23 @@
 import { notFound } from "next/navigation";
-import { documents } from "../../../lib/documents";
+import { getDocumentDetail } from "../../../lib/documents";
 import { ReviewTopbar, ReviewTabbar } from "../../_components/ReviewHeader";
-import { queueItems } from "../../_lib/review-data";
+import { toQueueItems } from "../../_lib/review-data";
 import { QueueTable } from "./QueueTable";
 
 export default async function ReviewQueue(props: PageProps<"/documents/[slug]/queue">) {
   const { slug } = await props.params;
-  const doc = documents.find((d) => d.slug === slug);
-  if (!doc) notFound();
+  const detail = await getDocumentDetail(slug);
+  if (!detail) notFound();
+
+  const items = toQueueItems(detail.result.queueItems);
 
   return (
     <div className="shell">
-      <ReviewTopbar doc={doc} />
-      <ReviewTabbar slug={slug} active="queue" queueCount={queueItems.length} />
+      <ReviewTopbar doc={detail.summary} />
+      <ReviewTabbar slug={slug} active="queue" queueCount={items.length} />
 
       <main className="content">
-        <QueueTable slug={slug} items={queueItems} />
+        <QueueTable slug={slug} items={items} />
       </main>
     </div>
   );

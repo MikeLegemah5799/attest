@@ -64,7 +64,7 @@ export function QueueTable({ slug, items }: { slug: string; items: QueueItem[] }
           </TableHeader>
           <TableBody>
             {visible.map((item) => (
-              <TableRow key={item.field}>
+              <TableRow key={item.id}>
                 <TableCell className="py-4 text-[13px]">{item.field}</TableCell>
                 <TableCell className="py-4 text-[13px] text-muted-foreground">{item.group}</TableCell>
                 <TableCell className="py-4 text-[13px]">

@@ -278,3 +278,12 @@ body{
   display:flex; align-items:center; gap:6px; margin-bottom: 6px;
 }
 .timeline-callout-body{ font-size: 13px; color: var(--state-error); line-height: 1.5; }
+
+/* Dates that couldn't be plotted (blocked — no computed value, so no valid
+   timeline position) — a stacked list below the timeline, not positioned
+   on it like .timeline-callout. */
+.blocked-dates{ display:flex; flex-direction:column; gap: 10px; margin-top: 20px; }
+.blocked-date-callout{
+  background: var(--bg-error); border: 1px solid var(--border-error); border-radius: 8px;
+  padding: 14px 16px;
+}

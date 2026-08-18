@@ -1,4 +1,15 @@
 import type { ConfidenceStatus } from "@/components/attest/ConfidenceBadge";
+import type { SurfacePrepResult } from "@/lib/pipeline/surfacePrep";
+import type { DerivedDate, ExtractionField, RiskFlag as DomainRiskFlag } from "@/lib/types";
+
+import { FIELD_GROUP_LABELS } from "../../lib/documents";
+
+/**
+ * View-shaping only — formatted labels, citation strings, timeline
+ * positions — for the three per-document review screens. Domain data comes
+ * from lib/pipeline/surfacePrep; this module never touches lib/db directly
+ * (code-standards.md: app/ owns final view formatting, not derivation).
+ */
 
 export type Field = {
   label: string;
@@ -20,66 +31,12 @@ export type TrackerCategory = {
 };
 
 export type QueueItem = {
+  id: string;
   field: string;
   group: string;
   status: ConfidenceStatus;
   page: string;
 };
-
-export const fieldSections: FieldSection[] = [
-  {
-    title: "Parties & Premises",
-    fields: [
-      {
-        label: "Landlord",
-        value: "Meridian Holdings LLC",
-        citation: 'p.1 · "the Landlord..."',
-        status: "grounded",
-      },
-      {
-        label: "Tenant",
-        value: "Fulcrum Analytics Inc.",
-        citation: 'p.1 · "the Tenant..."',
-        status: "grounded",
-      },
-      {
-        label: "Premises",
-        value: "Suite 1200, 4th Floor",
-        citation: 'p.1 · "approximately 12,400 rentable square feet..."',
-        status: "review",
-      },
-    ],
-  },
-  {
-    title: "Term",
-    fields: [
-      { label: "Commencement", value: "Jan 15, 2024", citation: "p.2", status: "grounded" },
-      { label: "Expiration", value: "Mar 14, 2027", citation: "p.2", status: "grounded" },
-      {
-        label: "Renewal Option",
-        value: "Notice period unverified",
-        citation: "Base commencement date confidence too low",
-        status: "blocked",
-      },
-    ],
-  },
-];
-
-export const trackerCategories: TrackerCategory[] = [
-  { label: "Parties & Premises", grounded: 2, total: 3, summary: "2 grounded · 1 review" },
-  { label: "Term", grounded: 2, total: 3, summary: "2 grounded · 1 blocked" },
-  { label: "Expenses", grounded: 2, total: 4, summary: "2 grounded · 2 review" },
-  { label: "Risk Clauses", grounded: 3, total: 5, summary: "3 grounded · 2 review" },
-];
-
-export const queueItems: QueueItem[] = [
-  { field: "Premises", group: "Parties/premises", status: "review", page: "p.1" },
-  { field: "Renewal option", group: "Term", status: "blocked", page: "p.2" },
-  { field: "Base year expenses", group: "Expenses", status: "review", page: "p.14" },
-  { field: "CAM cap", group: "Expenses", status: "review", page: "p.15" },
-  { field: "Co-tenancy clause", group: "Risk clauses", status: "review", page: "p.22" },
-  { field: "Assignment consent", group: "Risk clauses", status: "review", page: "p.23" },
-];
 
 export type CriticalDate = {
   date: string;
@@ -87,17 +44,15 @@ export type CriticalDate = {
   position: number;
 };
 
-export const timelineYears = [2024, 2025, 2026, 2027, 2028];
+export type BlockedDate = {
+  label: string;
+  reason: string;
+};
 
-export const criticalDates: CriticalDate[] = [
-  { date: "Jan 15", label: "Commencement", position: 0 },
-  { date: "Mar 14", label: "Expiration", position: 79 },
-];
-
-export const renewalNoticeCallout = {
-  title: "Renewal notice window",
-  body: "Blocked — commencement confidence too low to compute notice deadline",
-  position: 62,
+export type Timeline = {
+  years: number[];
+  markers: CriticalDate[];
+  blocked: BlockedDate[];
 };
 
 export type RiskFlag = {
@@ -107,29 +62,98 @@ export type RiskFlag = {
   source: string | null;
 };
 
-export const riskFlags: RiskFlag[] = [
-  {
-    label: "Co-tenancy clause",
-    severity: "review",
-    detail: "Rent abatement if anchor tenant vacates",
-    source: "p.22",
-  },
-  {
-    label: "Assignment consent required",
-    severity: "review",
-    detail: "Landlord consent required, not unreasonably withheld",
-    source: "p.23",
-  },
-  {
-    label: "No early termination",
-    severity: "neutral",
-    detail: "Standard fixed term",
-    source: "p.2",
-  },
-  {
-    label: "Percentage rent: none",
-    severity: "neutral",
-    detail: "Flat base rent structure",
-    source: null,
-  },
-];
+function truncate(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+export function toFieldSections(sections: SurfacePrepResult["fieldSections"]): FieldSection[] {
+  return sections
+    .filter((section) => section.fields.length > 0)
+    .map((section) => ({
+      title: FIELD_GROUP_LABELS[section.fieldGroup],
+      fields: section.fields.map((field) => ({
+        label: field.label,
+        value: field.value,
+        citation: `p.${field.pageNumber} · "${truncate(field.evidenceText, 40)}"`,
+        status: field.status,
+      })),
+    }));
+}
+
+export function toTrackerCategories(
+  categories: SurfacePrepResult["trackerCategories"],
+): TrackerCategory[] {
+  return categories.map((category) => ({
+    label: FIELD_GROUP_LABELS[category.fieldGroup],
+    grounded: category.grounded,
+    total: category.total,
+    summary:
+      category.total === 0
+        ? "no fields defined"
+        : category.grounded === category.total
+          ? "all grounded"
+          : `${category.grounded} of ${category.total} grounded`,
+  }));
+}
+
+export function toQueueItems(items: ExtractionField[]): QueueItem[] {
+  return items.map((field) => ({
+    id: field.id,
+    field: field.label,
+    group: FIELD_GROUP_LABELS[field.fieldGroup],
+    status: field.status,
+    page: `p.${field.pageNumber}`,
+  }));
+}
+
+/**
+ * Places `computed` dates on a timeline spanning their min/max year (padded
+ * by a year on each side); `blocked` dates have no position to plot, so
+ * they're surfaced as reasoned callouts instead of guessed onto the line.
+ */
+export function toTimeline(dates: DerivedDate[]): Timeline {
+  const computed = dates.filter(
+    (date): date is DerivedDate & { value: string } => date.status === "computed" && date.value !== null,
+  );
+  const blocked = dates
+    .filter((date) => date.status === "blocked")
+    .map((date) => ({ label: date.label, reason: date.reason ?? "blocked" }));
+
+  if (computed.length === 0) {
+    return { years: [], markers: [], blocked };
+  }
+
+  const years = computed.map((date) => new Date(date.value).getUTCFullYear());
+  const minYear = Math.min(...years) - 1;
+  const maxYear = Math.max(...years) + 1;
+  const rangeStartMs = Date.UTC(minYear, 0, 1);
+  const rangeEndMs = Date.UTC(maxYear + 1, 0, 1);
+  const totalMs = rangeEndMs - rangeStartMs;
+
+  const markers = computed.map((date) => {
+    const dateMs = new Date(date.value).getTime();
+    const position = Math.round(((dateMs - rangeStartMs) / totalMs) * 100);
+    return {
+      date: new Date(date.value).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      label: date.label,
+      position: Math.min(100, Math.max(0, position)),
+    };
+  });
+
+  const yearList: number[] = [];
+  for (let year = minYear; year <= maxYear; year++) yearList.push(year);
+
+  return { years: yearList, markers, blocked };
+}
+
+export function toRiskFlagViews(flags: DomainRiskFlag[]): RiskFlag[] {
+  return flags.map((flag) => ({
+    label: flag.label,
+    severity: flag.status,
+    detail:
+      flag.present && flag.evidenceText
+        ? truncate(flag.evidenceText, 80)
+        : "Not found in the pages reviewed.",
+    source: flag.present && flag.pageNumber ? `p.${flag.pageNumber}` : null,
+  }));
+}

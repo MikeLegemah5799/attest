@@ -307,21 +307,103 @@ Update this file after every meaningful implementation change.
   stage, ingest through surfacePrep, in one pass. Full suite now 43 tests,
   all passing. `npm run build`, `npm run lint`, `npx tsc --noEmit` all
   pass. All six pipeline stages now have real implementations.
+- UI rewired off real data. `app/lib/documents.ts` is now an async
+  `lib/db`/`surfacePrep`-backed module (`listDocumentSummaries`,
+  `getDocumentDetail`) instead of a static mock array; `app/documents/_lib/
+  review-data.ts` kept its view-shaping role but the mock consts became
+  pure transform functions (`toFieldSections`, `toTrackerCategories`,
+  `toQueueItems`, `toTimeline`, `toRiskFlagViews`) over real domain data —
+  matching the split code-standards.md already drew ("app/ owns final view
+  formatting, not derivation"). All four screens (documents list, review
+  workspace, review queue, critical dates & risk) now render real
+  persisted data, with real empty states (not crashes) for the 9 of 10
+  seeded documents that haven't been processed yet.
+  - Dropped `DocumentSummary.name` (redundant with `title`, real schema
+    only has one title field) and the `type` field is now a hardcoded
+    `"Office"` constant, not a DB column — project-overview.md scopes out
+    every other lease type, so a column for a constant isn't warranted.
+  - The critical-dates timeline is genuinely different from the mock: real
+    derived dates can be `blocked` (no valid position to plot), and more
+    than one can block at once, so blocked dates render as a stacked list
+    of reasoned callouts below the timeline instead of the mock's single
+    hardcoded positioned one. Added `.blocked-dates`/`.blocked-date-callout`
+    to `globals.css` for this (`.timeline-callout` stays absolute-positioned
+    for the real on-timeline case; reusing it for the stacked list would
+    have broken layout).
+  - The doc-viewer PDF pane is *not* wired to real `pdfjs-dist` rendering
+    or click-to-source highlighting in this pass — replaced the mock's
+    hardcoded fake paragraph (which would now contradict real field data
+    shown alongside it) with a short explanatory placeholder instead of
+    building real rendering, which is a separate, substantial client-side
+    feature. Logged as its own Next Up item, not silently dropped.
+  - Verified in a real browser session against the running dev server, not
+    just `npm run build`: the empty state for 9 unprocessed documents, then
+    ran the live pipeline for real against the seeded
+    `eloan-metro-square-jacksonville` document and confirmed all four
+    screens render its real fields/tracker counts/queue items/blocked
+    dates/risk flags correctly.
+  - **Found and fixed a real bug this session's own testing surfaced**:
+    `lib/db/seed.test.ts` deleted-and-recreated the 10 real fixture-slug
+    `documents` rows on every test run, which threw a foreign-key
+    constraint error the moment any of those documents had real
+    pipeline data attached (pages/extractions/derived_dates/risk_flags
+    reference `documents.id` with no cascade configured) — exactly what
+    happened once the E-Loan demo run above existed. Rewrote the test to
+    never delete those rows; it now asserts against whatever real state
+    already exists (idempotent re-seed, all 10 present, each filename
+    real) rather than resetting-then-testing. This also means `npm run
+    test` no longer wipes real seeded documents as a side effect —
+    previously it did, silently, each time (see: the `db:seed` re-runs
+    logged in earlier Completed entries working around exactly this).
+  - Refactored `DATE_TYPE_ORDER` out of `surfacePrep.ts` into a shared
+    `CRITICAL_DATE_TYPES` export on `lib/dates/criticalDates.ts` — evals
+    (below) needed the same four date-type strings, and hardcoding them a
+    third time risked drift.
+  - `npm run build`, `npm run lint` (zero warnings now — the evals stub
+    warnings are gone too, see below), `npx tsc --noEmit` all pass.
+- `evals/` harness implemented — `fieldsMatch` (type-aware comparator:
+  tolerant of date-format differences and currency/comma formatting on
+  values that are essentially just a number, exact-text fallback
+  otherwise — deliberately does *not* try to reconcile monthly-vs-annual
+  rent phrasing, since that's a real semantic difference, not a formatting
+  one) and `runEval` (scores every document with gold labels against its
+  latest run, field accuracy and derived-date accuracy as separate
+  scorecards per project-overview.md Goal 3, records an `eval_runs` row).
+  A gold label's `fieldKey` must resolve to one of the 18 extraction
+  fields or 4 derived date types or `runEval` throws — a labeling typo
+  fails loudly instead of silently shrinking the denominator and making
+  accuracy look better than it is. Tested with synthetic gold labels
+  (real db) covering both failure modes distinctly (field never
+  extracted vs. extracted-but-wrong), field-group breakdown, the
+  separate date-type scoring path, and the unrecognized-fieldKey throw.
+  Ran `npm run eval` for real against the dev db: completes cleanly and
+  reports honestly — `totalFields: 0` — since `fixtures/gold/` has no
+  labeled documents yet (Open Questions already flags this as the
+  likely-to-trim scope item). Full suite now 53 tests, all passing;
+  `npm run lint` has zero warnings for the first time this session — the
+  evals stub's unused-param warnings are gone along with the stub.
 
 ## In Progress
 
-- None — UI shell is paused pending the backend pipeline; the skeleton is
-  in place but no stage has real logic yet, even though every backend
-  stage behind it is now real. Next session should rewire the screens.
+- None — the full pipeline is wired end to end, from ingest through the UI
+  and the eval harness. What's left is populating `fixtures/gold/` with
+  real hand-labeled data, and the doc-viewer's real PDF rendering.
 
 ## Next Up
 
-1. Rewire the four existing screens from mock arrays
-   (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
-   `lib/db` queries via `surfacePrep`, and replace the doc-viewer skeleton
-   with a real `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-2. Only once the pipeline is stable end to end: `evals/` harness against the
-   gold set.
+1. Hand-label gold data in `fixtures/gold/` and seed it into `gold_labels`
+   so `npm run eval` reports real accuracy instead of `totalFields: 0` —
+   the biggest remaining gap between "the harness works" and "the harness
+   proves something." Scope (how many of the 10 starter documents, let
+   alone the full 20-doc target) is still the open question it always was.
+2. Real `pdfjs-dist`-rendered PDF viewer with click-to-source highlighting,
+   replacing the placeholder text in the review workspace's doc-viewer
+   pane — the one piece of the four screens still not wired to anything
+   real.
+3. Run the full pipeline against the other 9 seeded documents (only
+   `eloan-metro-square-jacksonville` has been processed so far) — needed
+   before the documents list looks like a populated demo rather than
+   mostly `0%`/`—` rows.
 
 ## Open Questions
 

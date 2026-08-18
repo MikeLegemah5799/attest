@@ -6,6 +6,16 @@ export type DeriveCriticalDatesInput = {
   extractions: ExtractionField[];
 };
 
+/** The four `dateType` values this module ever produces — the single source
+ * of truth other modules (surfacePrep's timeline ordering, evals' gold-label
+ * routing) key off, instead of re-declaring the same four strings. */
+export const CRITICAL_DATE_TYPES = [
+  "commencement",
+  "expiration",
+  "renewal_notice_deadline",
+  "next_escalation",
+] as const;
+
 type PendingDate = Omit<DerivedDate, "id" | "createdAt">;
 
 function groundedField(
