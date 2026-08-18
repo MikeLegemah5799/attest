@@ -5,19 +5,22 @@ Update this file after every meaningful implementation change.
 ## Current Phase
 
 - UI shell built and reconciled against `ui-context.md` (static, pre-pipeline)
-  — the four review-UI screens exist, match `context/screenshots/`, and now
-  run on shadcn/ui + Lucide as the spec requires, but still run entirely on
-  hardcoded mock data. No backend exists yet: `lib/pipeline/`, `lib/db/`,
-  `lib/dates/`, `lib/pdf/`, `evals/`, and `fixtures/` are all unstarted, and
-  no pipeline dependencies (Drizzle, Anthropic SDK, pdfjs-dist, zod) are
-  installed.
+  — the four review-UI screens exist, match `context/screenshots/`, and run
+  on shadcn/ui + Lucide as the spec requires, but still run entirely on
+  hardcoded mock data.
+- Backend skeleton now stood up per `architecture.md`: `lib/pipeline/`,
+  `lib/db/`, `lib/dates/`, `lib/pdf/`, `evals/`, and `fixtures/` all exist
+  with the shapes architecture.md defines, and pipeline dependencies
+  (Drizzle, Anthropic SDK, pdfjs-dist, zod, plus drizzle-kit/tsx/vitest for
+  tooling) are installed. No stage has real logic yet — every function is a
+  typed stub that throws `not implemented`. Nothing is wired to the UI.
 
 ## Current Goal
 
-- Resume the original goal, deferred while the UI shell was built: stand up
-  the project skeleton and get one lease flowing end to end through
-  ingest → extract → verify → persist, even with rough output, before
-  extending the UI further or touching the eval harness.
+- Get one lease flowing end to end through ingest → extract → verify →
+  persist, even with rough output, before extending the UI further or
+  touching the eval harness. The skeleton scaffolding is done; next is
+  filling in the ingest stage against one fixture.
 
 ## Completed
 
@@ -48,36 +51,54 @@ Update this file after every meaningful implementation change.
   CSS since shadcn has no equivalent for page-specific composition — see
   Session Notes for the scoping reasoning. `npm run build` and `npm run
   lint` both pass.
+- Backend skeleton scaffolded per `architecture.md`'s file organization and
+  six pipeline stages (ingest, extract, verify, persist, derive,
+  surface-prep) — each stage is its own file in `lib/pipeline/` with a
+  typed signature and a `not implemented` body, ready to be filled in one
+  at a time. Full Drizzle schema written for all seven tables
+  (`documents`, `pages`, `extractions`, `derived_dates`, `risk_flags`,
+  `gold_labels`, `eval_runs`) with an initial migration generated
+  (`lib/db/migrations/0000_tiny_energizer.sql`) — schema is structural, not
+  pipeline logic, so it was safe to land in the same scaffolding step
+  rather than splitting it out per ai-workflow-rules.md. `lib/db/queries/`
+  has real (non-stub) CRUD per table since that's mechanical once the
+  schema is fixed. `lib/pdf/` and `lib/dates/` are typed stubs only — real
+  implementation is later, sequenced increments. Added `lib/types.ts` as
+  the shared domain-type module code-standards.md calls for
+  (`ExtractionField`, `DerivedDate`, `RiskFlag`, `ConfidenceStatus`,
+  `FieldGroup`) and pointed the existing `ConfidenceBadge.tsx` at it
+  instead of its own local declaration, so backend and UI share one
+  vocabulary. Installed Drizzle, better-sqlite3, the Anthropic SDK,
+  pdfjs-dist, zod, drizzle-kit, tsx, and vitest; added `db:generate`,
+  `db:migrate`, `eval`, and `test` npm scripts. `npm run build`, `npm run
+  lint`, and `npx tsc --noEmit` all pass; `npm run eval` and `npm run test`
+  correctly fail (not-implemented / no tests yet) until their stages land.
 
 ## In Progress
 
-- None — UI shell is paused pending the backend pipeline.
+- None — UI shell is paused pending the backend pipeline; the skeleton is
+  in place but no stage has real logic yet.
 
 ## Next Up
 
-1. Scaffold `lib/pipeline/`, `lib/db/`, `lib/dates/`, `lib/pdf/`, `evals/`,
-   `fixtures/` per architecture.md, and install their dependencies (Drizzle,
-   Anthropic SDK, pdfjs-dist, zod).
-2. Pull 5–10 real commercial lease PDFs from SEC EDGAR EX-10 exhibits into
+1. Pull 5–10 real commercial lease PDFs from SEC EDGAR EX-10 exhibits into
    `fixtures/` as a starter set (full 20-doc gold set can follow once the
    pipeline shape is proven).
-3. Define the Drizzle schema for `documents`, `pages`, `extractions`,
-   `derived_dates`, `risk_flags`, `gold_labels`, `eval_runs`.
-4. Build `lib/pdf/` — typed wrapper around `pdfjs-dist` for text + coordinate
-   extraction.
-5. Build the ingest stage and confirm it runs cleanly against one fixture
+2. Implement `lib/pdf/` for real — typed wrapper around `pdfjs-dist` for
+   text + coordinate extraction (currently a typed stub only).
+3. Build the ingest stage and confirm it runs cleanly against one fixture
    lease.
-6. Extract → verify → persist stages, in that order, each landed and
+4. Extract → verify → persist stages, in that order, each landed and
    verified against one fixture before the next starts (per the scoping
    rules in ai-workflow-rules.md).
-7. `lib/dates/` derivation engine (pure functions, Vitest-covered),
+5. `lib/dates/` derivation engine (pure functions, Vitest-covered),
    replacing the hardcoded tracker/timeline/risk-flag data the UI currently
    renders.
-8. Rewire the four existing screens from mock arrays
+6. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
    `lib/db` queries, and replace the doc-viewer skeleton with a real
    `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-9. Only once the pipeline is stable end to end: `evals/` harness against the
+7. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
 ## Open Questions
@@ -131,6 +152,25 @@ Update this file after every meaningful implementation change.
   "verified," diluting that signal. The only solid-color button in the
   mockups (the active filter chip) is ink-dark, not green, which confirmed
   ink-dark is the right generic `--primary`.
+- **`pages` stores a text-cache pointer, not page text** — architecture.md's
+  storage model calls SQLite the home for "document metadata, page text
+  index, extractions...", while code-standards.md says page text "is cached
+  to disk per document, not persisted as a giant text column." Read
+  together, "index" means metadata about the cached text (page number,
+  char count, cache file path), not the text itself — so the `pages` table
+  holds `text_cache_path` + `char_count`, and the actual extracted text
+  will live in per-document cache files written by `lib/pdf/` (path/format
+  to be decided when ingest is implemented).
+- **`risk_flags.source_field_key` is a field key, not a foreign key to
+  `extractions.id`** — matches how `derived_dates.source_field_keys`
+  already references source fields, so both derived tables read the same
+  way and a risk flag stays traceable without an extra join, at the cost of
+  not being a DB-enforced foreign key.
+- **`better-sqlite3`, not `node:sqlite` or a WASM driver** — it's the
+  standard, best-documented Drizzle SQLite driver and needs no extra
+  runtime config; its native binding required approving an `npm`
+  install-script gate (`node-gyp rebuild`), which is expected for a native
+  module and was verified working before relying on it.
 
 ## Session Notes
 
