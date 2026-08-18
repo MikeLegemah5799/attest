@@ -1,10 +1,10 @@
-import type { Status } from "../_components/StatusPill";
+import type { ConfidenceStatus } from "@/components/attest/ConfidenceBadge";
 
 export type Field = {
   label: string;
   value: string;
   citation: string;
-  status: Status;
+  status: ConfidenceStatus;
 };
 
 export type FieldSection = {
@@ -22,7 +22,7 @@ export type TrackerCategory = {
 export type QueueItem = {
   field: string;
   group: string;
-  status: Status;
+  status: ConfidenceStatus;
   page: string;
 };
 
@@ -100,11 +100,9 @@ export const renewalNoticeCallout = {
   position: 62,
 };
 
-export type RiskSeverity = "flag" | "neutral";
-
 export type RiskFlag = {
   label: string;
-  severity: RiskSeverity;
+  severity: ConfidenceStatus;
   detail: string;
   source: string | null;
 };
@@ -112,13 +110,13 @@ export type RiskFlag = {
 export const riskFlags: RiskFlag[] = [
   {
     label: "Co-tenancy clause",
-    severity: "flag",
+    severity: "review",
     detail: "Rent abatement if anchor tenant vacates",
     source: "p.22",
   },
   {
     label: "Assignment consent required",
-    severity: "flag",
+    severity: "review",
     detail: "Landlord consent required, not unreasonably withheld",
     source: "p.23",
   },

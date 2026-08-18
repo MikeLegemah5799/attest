@@ -1,8 +1,10 @@
+import { ArrowRight, FileX } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfidenceBadge } from "@/components/attest/ConfidenceBadge";
 import { documents } from "../../../lib/documents";
 import { ReviewTopbar, ReviewTabbar } from "../../_components/ReviewHeader";
-import { RiskPill } from "../../_components/RiskPill";
 import { criticalDates, timelineYears, renewalNoticeCallout, riskFlags, queueItems } from "../../_lib/review-data";
 
 export default async function CriticalDatesAndRisk(props: PageProps<"/documents/[slug]/risk">) {
@@ -43,7 +45,7 @@ export default async function CriticalDatesAndRisk(props: PageProps<"/documents/
               })}
               <div className="timeline-callout" style={{ left: `${renewalNoticeCallout.position}%` }}>
                 <div className="timeline-callout-title">
-                  <span>✕</span> {renewalNoticeCallout.title}
+                  <FileX className="size-3.5" /> {renewalNoticeCallout.title}
                 </div>
                 <div className="timeline-callout-body">{renewalNoticeCallout.body}</div>
               </div>
@@ -60,34 +62,45 @@ export default async function CriticalDatesAndRisk(props: PageProps<"/documents/
             </div>
           </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Flag</th>
-                <th>Detail</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              {riskFlags.map((flag) => (
-                <tr key={flag.label}>
-                  <td>
-                    <RiskPill label={flag.label} severity={flag.severity} />
-                  </td>
-                  <td>{flag.detail}</td>
-                  <td className="queue-open">
-                    {flag.source ? (
-                      <Link href={`/documents/${slug}`} className="row-link link-source">
-                        {flag.source} →
-                      </Link>
-                    ) : (
-                      <span className="muted">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-auto bg-muted py-2.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                    Flag
+                  </TableHead>
+                  <TableHead className="h-auto bg-muted py-2.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                    Detail
+                  </TableHead>
+                  <TableHead className="h-auto bg-muted py-2.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                    Source
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {riskFlags.map((flag) => (
+                  <TableRow key={flag.label}>
+                    <TableCell className="py-4 text-[13px]">
+                      <ConfidenceBadge status={flag.severity} label={flag.label} />
+                    </TableCell>
+                    <TableCell className="py-4 text-[13px]">{flag.detail}</TableCell>
+                    <TableCell className="py-4 text-right text-[13px]">
+                      {flag.source ? (
+                        <Link
+                          href={`/documents/${slug}`}
+                          className="inline-flex items-center gap-1 font-mono text-muted-foreground hover:text-foreground"
+                        >
+                          {flag.source} <ArrowRight className="size-3.5" />
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </main>
     </div>

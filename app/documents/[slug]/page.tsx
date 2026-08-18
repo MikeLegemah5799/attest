@@ -1,7 +1,9 @@
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ConfidenceBadge, type ConfidenceStatus } from "@/components/attest/ConfidenceBadge";
 import { documents } from "../../lib/documents";
 import { ReviewTopbar, ReviewTabbar } from "../_components/ReviewHeader";
-import { StatusPill, type Status } from "../_components/StatusPill";
 import { fieldSections, trackerCategories, queueItems } from "../_lib/review-data";
 
 function FieldCard({
@@ -15,7 +17,7 @@ function FieldCard({
   label: string;
   value: string;
   citation: string;
-  status: Status;
+  status: ConfidenceStatus;
   active?: boolean;
   error?: boolean;
 }) {
@@ -23,7 +25,7 @@ function FieldCard({
     <div className={`field-card${active ? " field-card--active" : ""}`}>
       <div className="field-card-head">
         <span className="field-label">{label}</span>
-        <StatusPill status={status} />
+        <ConfidenceBadge status={status} />
       </div>
       <div className="field-value">{value}</div>
       <div className={`field-cite${error ? " error" : ""}`}>{citation}</div>
@@ -45,15 +47,13 @@ function TrackerRow({
   return (
     <div className="tracker-row">
       <span className="tracker-label">
-        <span className="tracker-chevron">▼</span>
+        <ChevronDown className="tracker-chevron" />
         {label}
       </span>
       <span className="tracker-summary">
-        <span className="tracker-dots">
+        <span className="dots dots--sm">
           {Array.from({ length: total }, (_, i) => (
-            <span key={i} className={i < grounded ? "dot-filled" : "dot-empty"}>
-              ●
-            </span>
+            <span key={i} className={i < grounded ? "dot dot-filled" : "dot dot-empty"} />
           ))}
         </span>
         {summary}
@@ -97,9 +97,13 @@ export default async function DocumentReview(props: PageProps<"/documents/[slug]
             </div>
 
             <div className="pager">
-              <button type="button">◀ prev</button>
+              <Button type="button" variant="ghost" size="sm" className="font-mono text-secondary-foreground">
+                <ChevronLeft /> prev
+              </Button>
               <span>page 4 / 38</span>
-              <button type="button">next ▶</button>
+              <Button type="button" variant="ghost" size="sm" className="font-mono text-secondary-foreground">
+                next <ChevronRight />
+              </Button>
             </div>
           </div>
 

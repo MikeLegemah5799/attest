@@ -4,38 +4,81 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Not started — planning complete (project-overview.md, architecture.md,
-  code-standards.md written and reviewed). Implementation starts next
-  session.
+- UI shell built and reconciled against `ui-context.md` (static, pre-pipeline)
+  — the four review-UI screens exist, match `context/screenshots/`, and now
+  run on shadcn/ui + Lucide as the spec requires, but still run entirely on
+  hardcoded mock data. No backend exists yet: `lib/pipeline/`, `lib/db/`,
+  `lib/dates/`, `lib/pdf/`, `evals/`, and `fixtures/` are all unstarted, and
+  no pipeline dependencies (Drizzle, Anthropic SDK, pdfjs-dist, zod) are
+  installed.
 
 ## Current Goal
 
-- Stand up the project skeleton and get one lease flowing end to end through
+- Resume the original goal, deferred while the UI shell was built: stand up
+  the project skeleton and get one lease flowing end to end through
   ingest → extract → verify → persist, even with rough output, before
-  touching the UI or the eval harness.
+  extending the UI further or touching the eval harness.
 
 ## Completed
 
-- None yet.
+- `app/page.tsx` — Documents list screen. Bordered table, one row per
+  document, links to each document's review workspace.
+- `app/documents/[slug]/page.tsx` — Review workspace. Extraction panel
+  (field cards grouped by section, each with a status pill and citation) next
+  to a document-viewer placeholder (skeleton lines, no real PDF rendering
+  yet) and a category progress tracker.
+- `app/documents/[slug]/queue/page.tsx` — Review queue. Filterable table
+  (All flagged / Needs review / Blocked) of below-threshold fields.
+- `app/documents/[slug]/risk/page.tsx` — Critical dates & risk. A derived
+  critical-date timeline and a risk-flags table.
+- `app/globals.css` — color and typography tokens matching
+  `ui-context.md`'s spec exactly (bg-base, text-primary, accent-primary,
+  state-success/warning/error, Inter/IBM Plex Mono).
+- shadcn/ui + Lucide reconciliation — installed shadcn/ui (`components.json`,
+  `lib/utils.ts`, `components/ui/{button,badge,table}.tsx`) and lucide-react,
+  bridged shadcn's CSS-variable theme onto the existing brand palette instead
+  of its default neutral scale (see Architecture Decisions), and removed the
+  unicode glyphs (●▲✕) and hand-drawn SVG in favor of Lucide icons
+  (FileCheck/AlertTriangle/FileX/Minus/ChevronDown/ChevronLeft/ChevronRight/
+  ArrowRight/Upload). Added `components/attest/ConfidenceBadge.tsx` — the
+  single grounded/review/blocked/neutral badge ui-context.md calls for,
+  replacing the old duplicated `StatusPill`/`RiskPill`. Buttons, badges, and
+  tables across all four screens now use the shadcn primitives; layout
+  chrome (topbar, tabbar, timeline, field cards, tracker) stays hand-written
+  CSS since shadcn has no equivalent for page-specific composition — see
+  Session Notes for the scoping reasoning. `npm run build` and `npm run
+  lint` both pass.
 
 ## In Progress
 
-- None yet.
+- None — UI shell is paused pending the backend pipeline.
 
 ## Next Up
 
-- Scaffold Next.js 16 app with the `app/`, `lib/pipeline/`, `lib/db/`,
-  `lib/dates/`, `lib/pdf/`, `evals/`, `fixtures/` structure from
-  architecture.md.
-- Pull 5–10 real commercial lease PDFs from SEC EDGAR EX-10 exhibits into
-  `fixtures/` as a starter set (full 20-doc gold set can follow once the
-  pipeline shape is proven).
-- Define the Drizzle schema for `documents`, `pages`, `extractions`,
-  `derived_dates`, `risk_flags`, `gold_labels`, `eval_runs`.
-- Build `lib/pdf/` — typed wrapper around `pdfjs-dist` for text + coordinate
-  extraction.
-- Build the ingest stage and confirm it runs cleanly against one fixture
-  lease.
+1. Scaffold `lib/pipeline/`, `lib/db/`, `lib/dates/`, `lib/pdf/`, `evals/`,
+   `fixtures/` per architecture.md, and install their dependencies (Drizzle,
+   Anthropic SDK, pdfjs-dist, zod).
+2. Pull 5–10 real commercial lease PDFs from SEC EDGAR EX-10 exhibits into
+   `fixtures/` as a starter set (full 20-doc gold set can follow once the
+   pipeline shape is proven).
+3. Define the Drizzle schema for `documents`, `pages`, `extractions`,
+   `derived_dates`, `risk_flags`, `gold_labels`, `eval_runs`.
+4. Build `lib/pdf/` — typed wrapper around `pdfjs-dist` for text + coordinate
+   extraction.
+5. Build the ingest stage and confirm it runs cleanly against one fixture
+   lease.
+6. Extract → verify → persist stages, in that order, each landed and
+   verified against one fixture before the next starts (per the scoping
+   rules in ai-workflow-rules.md).
+7. `lib/dates/` derivation engine (pure functions, Vitest-covered),
+   replacing the hardcoded tracker/timeline/risk-flag data the UI currently
+   renders.
+8. Rewire the four existing screens from mock arrays
+   (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
+   `lib/db` queries, and replace the doc-viewer skeleton with a real
+   `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
+9. Only once the pipeline is stable end to end: `evals/` harness against the
+   gold set.
 
 ## Open Questions
 
@@ -80,6 +123,14 @@ Update this file after every meaningful implementation change.
 - **Office leases only, no amendment-chain resolution** — scoped out to fit
   a two-day build; amendments are the leading "what I'd build next" answer
   for the follow-up discussion.
+- **shadcn's `--primary` token is mapped to ink-dark (`--text-primary`), not
+  `--accent-primary`** — ui-context.md states the verification accent and
+  the "grounded" state are the same idea and "should never visually
+  diverge." Feeding accent-primary into shadcn's generic default-button
+  color would make every primary action (e.g. the Import button) read as
+  "verified," diluting that signal. The only solid-color button in the
+  mockups (the active filter chip) is ink-dark, not green, which confirmed
+  ink-dark is the right generic `--primary`.
 
 ## Session Notes
 
@@ -96,3 +147,23 @@ Update this file after every meaningful implementation change.
 - Keep prompts and commit history as you go — the recruiter explicitly asked
   for these for the harness/process discussion, so don't reconstruct them
   after the fact.
+- The four UI screens were built directly against `context/screenshots/`
+  mockups before any backend work started, out of the sequence
+  `progress-tracker.md` originally called for (skeleton → ingest → extract →
+  verify → persist, before touching the UI). Worth naming plainly in the
+  follow-up discussion as a deliberate sequencing deviation, not an
+  oversight — it front-loaded design validation against the provided
+  mockups. The screens are static (hardcoded arrays, no `lib/db`) and will
+  need rewiring once the pipeline lands.
+- shadcn/ui + Lucide reconciliation scope: only the pieces with a real
+  primitive equivalent were converted — buttons, badges, and tables. Layout
+  chrome specific to this product (topbar, tabbar, the critical-dates
+  timeline, field cards, the category tracker) was left as hand-written CSS
+  in `app/globals.css` rather than rewritten as raw Tailwind utility strings
+  in JSX, since `ui-context.md`'s Component Library section scopes shadcn to
+  base components and describes layout patterns in prose, not as a mandate
+  to eliminate all custom CSS. The shadcn CLI's own `init` output also
+  pulled in dead scaffolding not used anywhere in this build — dark-mode
+  variants (ui-context.md is explicitly light-only), sidebar/chart tokens,
+  and a decorative shimmer/scroll-fade utility import — all removed per
+  code-standards.md's "no dead scaffolding" rule.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import type { DocumentSummary } from "../../lib/documents";
 
 export function ReviewTopbar({ doc }: { doc: DocumentSummary }) {
@@ -13,9 +14,7 @@ export function ReviewTopbar({ doc }: { doc: DocumentSummary }) {
       <span className="verify-badge">
         <span className="dots">
           {Array.from({ length: doc.verifiedTotal }, (_, i) => (
-            <span key={i} className={i < doc.verifiedFilled ? "dot-filled" : "dot-empty"}>
-              ●
-            </span>
+            <span key={i} className={i < doc.verifiedFilled ? "dot dot-filled" : "dot dot-empty"} />
           ))}
         </span>
         <span className="mono">{doc.verifiedPercent}% verified</span>
@@ -39,7 +38,13 @@ export function ReviewTabbar({
         Review
       </Link>
       <Link href={`/documents/${slug}/queue`} className={`tab${active === "queue" ? " active" : ""}`}>
-        Review queue <span className="tab-count">{queueCount}</span>
+        Review queue
+        <Badge
+          variant="outline"
+          className="rounded-md border-transparent bg-(--bg-warning) font-mono text-(--state-warning)"
+        >
+          {queueCount}
+        </Badge>
       </Link>
       <Link href={`/documents/${slug}/risk`} className={`tab${active === "risk" ? " active" : ""}`}>
         Critical dates &amp; risk

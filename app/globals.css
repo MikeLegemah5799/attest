@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root{
   --bg-base: #F7F5F0;
@@ -18,21 +19,88 @@
   --border-success: #cdd8c8;
   --border-warning: #e6d4b8;
   --border-error: #e3c5be;
- 
+
   --sans: 'Inter', system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* shadcn/ui token bridge — mapped onto the palette above, not shadcn's
+     default neutral scale. --primary is ink-dark, not --accent-primary:
+     accent-primary is reserved for the "grounded" verification signal per
+     ui-context.md ("the verification accent and the grounded state are the
+     same idea... should never visually diverge"), so it must not double as
+     a generic button color. */
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --card: var(--bg-surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--text-primary);
+  --primary-foreground: var(--bg-surface);
+  --secondary: var(--bg-surface);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-base);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--bg-base);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--state-error);
+  --destructive-foreground: var(--bg-surface);
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--accent-primary);
+  --radius: 0.5rem;
 }
- 
-*{ box-sizing: border-box; margin:0; padding:0; }
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Fixed per ui-context.md's Border Radius table, not derived by
+     multiplier: 6px inline/badges, 8px cards, 12px modals — "nothing above
+     12px." */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
+}
+
+/* Layered (not a bare top-level rule) so Tailwind's utility classes — which
+   Tailwind itself emits inside @layer utilities — can still override this
+   reset. An unlayered rule always beats a layered one regardless of
+   specificity, which was silently zeroing out padding/margin utilities
+   (e.g. table cell py-*) everywhere in the app. */
+@layer base {
+  * { box-sizing: border-box; margin:0; padding:0; @apply border-border outline-ring/50; }
+}
 body{
   font-family: var(--sans);
   background: var(--bg-base);
   color: var(--text-primary);
   width: 100%;
 }
- 
+
 .shell{ display:flex; flex-direction:column; min-height: 100%; }
- 
+
 .topbar{
   height: 52px;
   display:flex;
@@ -58,15 +126,18 @@ body{
 
 .row-link{ color: inherit; text-decoration: none; }
 .row-link:hover{ text-decoration: underline; }
- 
+
 .verify-badge{
   display:flex; align-items:center; gap:8px;
   font-family: var(--mono); font-size: 12px; color: var(--text-secondary);
 }
-.dots{ letter-spacing: 2px; font-size: 13px; }
-.dot-filled{ color: var(--accent-primary); }
-.dot-empty{ color: var(--border-default); }
- 
+.dots{ display:inline-flex; align-items:center; gap: 4px; }
+.dots--sm{ gap: 3px; }
+.dot{ width: 6px; height: 6px; border-radius: 50%; flex-shrink:0; }
+.dots--sm .dot{ width: 5px; height: 5px; }
+.dot-filled{ background: var(--accent-primary); }
+.dot-empty{ background: var(--border-default); }
+
 .tabbar{
   display:flex; gap: 28px;
   padding: 0 24px;
@@ -83,61 +154,26 @@ body{
   text-decoration: none;
 }
 .tab.active{ color: var(--text-primary); font-weight:500; border-bottom-color: var(--accent-primary); }
-.tab-count{
-  font-family: var(--mono); font-size:11px;
-  background: var(--bg-warning); color: var(--state-warning);
-  padding: 1px 6px; border-radius: 10px;
-}
- 
+
 .content{ flex:1; padding: 24px; }
 
 .page-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 16px; }
 .page-title{ font-size: 20px; font-weight: 600; color: var(--text-primary); }
-
-.btn-import{
-  font-family: var(--sans); font-size: 13px; font-weight:500;
-  padding: 7px 14px; border-radius: 6px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface); color: var(--text-primary);
-  cursor: pointer;
-}
-.btn-import:hover{ background: var(--bg-base); }
 
 .flag-count{
   display:inline-flex; align-items:center; gap:5px;
   font-family: var(--mono); font-size:12px; font-weight:500;
   color: var(--state-warning);
 }
- 
-.state-pill{
-  display:inline-flex; align-items:center; gap:5px;
-  font-family: var(--mono); font-size: 11px; font-weight:500;
-  padding: 2px 8px; border-radius: 6px;
-  white-space:nowrap;
-}
-.state-grounded{ background: var(--bg-success); color: var(--state-success); }
-.state-review{ background: var(--bg-warning); color: var(--state-warning); }
-.state-blocked{ background: var(--bg-error); color: var(--state-error); }
-.state-neutral{ background: var(--border-default); color: var(--text-muted); }
- 
+
 .icon{ width:11px; height:11px; flex-shrink:0; }
- 
-table{ width:100%; border-collapse: collapse; background: var(--bg-surface); border:1px solid var(--border-default); border-radius:8px; overflow:hidden; }
-th{
-  text-align:left; font-size:11px; font-weight:500; color:var(--text-muted);
-  text-transform:uppercase; letter-spacing:0.04em;
-  padding: 10px 16px; border-bottom:1px solid var(--border-default);
-  background: var(--bg-base);
-}
-td{ padding: 12px 16px; font-size:13px; border-bottom:1px solid var(--border-default); vertical-align:middle; }
-tr:last-child td{ border-bottom:none; }
- 
+
 .section-title{
   font-family: var(--mono); font-size:11px; font-weight:500;
   letter-spacing: 0.06em; text-transform:uppercase; color: var(--text-muted);
   margin-bottom: 10px;
 }
- 
+
 .mono{ font-family: var(--mono); }
 .muted{ color: var(--text-muted); }
 
@@ -196,33 +232,15 @@ tr:last-child td{ border-bottom:none; }
   display:flex; align-items:center; gap: 8px; font-weight: 500;
   letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-primary);
 }
-.tracker-chevron{ color: var(--text-muted); font-size: 9px; }
+.tracker-chevron{ width: 12px; height: 12px; color: var(--text-muted); }
 .tracker-summary{
   display:flex; align-items:center; gap: 8px;
   font-family: var(--mono); color: var(--text-muted);
 }
-.tracker-dots{ letter-spacing: 2px; font-size: 11px; }
 
 /* Review queue */
 .filter-row{ display:flex; align-items:center; gap: 10px; margin-bottom: 16px; }
 .filter-label{ font-size: 13px; color: var(--text-muted); }
-.filter-chip{
-  font-family: var(--sans); font-size: 13px; font-weight:500;
-  padding: 7px 14px; border-radius: 6px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface); color: var(--text-primary);
-  cursor: pointer;
-}
-.filter-chip:hover{ background: var(--bg-base); }
-.filter-chip--active{
-  background: var(--text-primary); border-color: var(--text-primary); color: var(--bg-surface);
-}
-.filter-chip--active:hover{ background: var(--text-primary); }
-
-.queue-open{ text-align: right; }
-.link-open{ color: var(--text-primary); font-weight: 500; }
-.link-source{ font-family: var(--mono); color: var(--text-muted); }
-.link-source:hover{ color: var(--text-primary); }
 
 /* Critical dates & risk */
 .panel-card{
