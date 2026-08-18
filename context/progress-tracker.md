@@ -73,6 +73,31 @@ Update this file after every meaningful implementation change.
   `db:migrate`, `eval`, and `test` npm scripts. `npm run build`, `npm run
   lint`, and `npx tsc --noEmit` all pass; `npm run eval` and `npm run test`
   correctly fail (not-implemented / no tests yet) until their stages land.
+- `fixtures/leases/` seeded with a 10-document starter set of real commercial
+  office lease PDFs sourced from SEC EDGAR EX-10/EX-99 exhibits, with mixed
+  provenance: 5 were filed on EDGAR natively as PDF (E-Loan, Inc. — Metro
+  Square, Jacksonville FL; 8x8, Inc. — two distinct leases, Sunnyvale CA and
+  San Jose CA; Heritage Commerce Corp / Heritage Bank of Commerce — Walnut
+  Creek CA; Tekelec — Morrisville NC), and 5 more were filed on EDGAR only as
+  HTML and converted locally to PDF with headless Google Chrome
+  (`--print-to-pdf --no-pdf-header-footer`) once the native-PDF pool was
+  exhausted — genuine text-layer PDF EX-10 exhibits are rare on EDGAR, since
+  the vast majority of exhibits (including all 5 of these) are filed as HTML
+  (Radiant Systems, Inc. — Fort Worth TX; AVI Biopharma, Inc. — Bothell WA;
+  Federal Home Loan Bank of Seattle — Seattle WA; Circuit Research Labs, Inc.
+  — San Leandro CA; Entropic Communications, Inc. — San Diego CA). Every file,
+  regardless of provenance, was downloaded directly from `sec.gov` with a
+  descriptive `User-Agent`, spot-checked as a genuine, fully filled-in,
+  standalone office lease (not an amendment stub, sublease summary, or blank
+  template), and verified via `pdftotext` to carry a real, clean embedded text
+  layer (not a scanned image, not garbled OCR). Full provenance (filer, filing
+  type/date, exhibit number, accession number, exact EDGAR URL, and — for the
+  5 converted files — which tool did the HTML→PDF conversion) is in
+  `fixtures/leases/SOURCES.md`, along with the rejected candidates from both
+  search passes and why (non-office use, amendment-only, sublease, garbled
+  OCR, whole-filing PDF copies, etc.). The full 20-doc gold set
+  (`fixtures/gold/`) is unaffected — this was scoped as the starter set only,
+  per `project-overview.md`.
 
 ## In Progress
 
@@ -81,24 +106,21 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-1. Pull 5–10 real commercial lease PDFs from SEC EDGAR EX-10 exhibits into
-   `fixtures/` as a starter set (full 20-doc gold set can follow once the
-   pipeline shape is proven).
-2. Implement `lib/pdf/` for real — typed wrapper around `pdfjs-dist` for
+1. Implement `lib/pdf/` for real — typed wrapper around `pdfjs-dist` for
    text + coordinate extraction (currently a typed stub only).
-3. Build the ingest stage and confirm it runs cleanly against one fixture
+2. Build the ingest stage and confirm it runs cleanly against one fixture
    lease.
-4. Extract → verify → persist stages, in that order, each landed and
+3. Extract → verify → persist stages, in that order, each landed and
    verified against one fixture before the next starts (per the scoping
    rules in ai-workflow-rules.md).
-5. `lib/dates/` derivation engine (pure functions, Vitest-covered),
+4. `lib/dates/` derivation engine (pure functions, Vitest-covered),
    replacing the hardcoded tracker/timeline/risk-flag data the UI currently
    renders.
-6. Rewire the four existing screens from mock arrays
+5. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
    `lib/db` queries, and replace the doc-viewer skeleton with a real
    `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-7. Only once the pipeline is stable end to end: `evals/` harness against the
+6. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
 ## Open Questions
@@ -171,6 +193,15 @@ Update this file after every meaningful implementation change.
   runtime config; its native binding required approving an `npm`
   install-script gate (`node-gyp rebuild`), which is expected for a native
   module and was verified working before relying on it.
+- **Fixture naming: `fixtures/leases/<company-slug-property-slug>.pdf`,
+  kebab-case, no existing convention to match** — not specified in
+  architecture.md, so picked one file-per-lease with a short, readable slug
+  derived from tenant company + property/street identifier (e.g.
+  `eloan-metro-square-jacksonville.pdf`, `8x8-sunnyvale-maude-ave.pdf`) rather
+  than accession-number-based or numbered filenames, since the slug alone
+  should let a reader guess the lease without opening `SOURCES.md`. Full
+  provenance (filer, filing type/date, exhibit #, accession #, EDGAR URL)
+  lives in `fixtures/leases/SOURCES.md` rather than encoded in the filename.
 
 ## Session Notes
 
