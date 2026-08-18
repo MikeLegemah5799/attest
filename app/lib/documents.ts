@@ -65,9 +65,14 @@ export async function listDocumentSummaries(): Promise<DocumentSummary[]> {
  */
 export async function getDocumentDetail(
   slug: string,
-): Promise<{ documentId: string; summary: DocumentSummary; result: SurfacePrepResult } | null> {
+): Promise<{
+  documentId: string;
+  summary: DocumentSummary;
+  result: SurfacePrepResult;
+  pageCount: number;
+} | null> {
   const doc = getDocumentBySlug(slug);
   if (!doc) return null;
   const result = await surfacePrep({ documentId: doc.id });
-  return { documentId: doc.id, summary: summarize(doc, result), result };
+  return { documentId: doc.id, summary: summarize(doc, result), result, pageCount: doc.pageCount ?? 0 };
 }

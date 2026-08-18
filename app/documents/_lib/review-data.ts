@@ -1,6 +1,6 @@
 import type { ConfidenceStatus } from "@/components/attest/ConfidenceBadge";
 import type { SurfacePrepResult } from "@/lib/pipeline/surfacePrep";
-import type { DerivedDate, ExtractionField, RiskFlag as DomainRiskFlag } from "@/lib/types";
+import type { BoundingBox, DerivedDate, ExtractionField, RiskFlag as DomainRiskFlag } from "@/lib/types";
 
 import { FIELD_GROUP_LABELS } from "../../lib/documents";
 
@@ -16,6 +16,8 @@ export type Field = {
   value: string;
   citation: string;
   status: ConfidenceStatus;
+  pageNumber: number;
+  boundingBox: BoundingBox | null;
 };
 
 export type FieldSection = {
@@ -76,6 +78,8 @@ export function toFieldSections(sections: SurfacePrepResult["fieldSections"]): F
         value: field.value,
         citation: `p.${field.pageNumber} · "${truncate(field.evidenceText, 40)}"`,
         status: field.status,
+        pageNumber: field.pageNumber,
+        boundingBox: field.boundingBox,
       })),
     }));
 }
