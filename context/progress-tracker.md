@@ -239,25 +239,88 @@ Update this file after every meaningful implementation change.
     its own increment per the scoping rules, same as extract/verify/
     persist were each landed separately.
 
+- `lib/pipeline/derive.ts` (stage 5/6) implemented — loads a run's
+  extraction rows via `listExtractionsForRun`, calls
+  `deriveCriticalDates`/`deriveRiskFlags`, persists both via the
+  already-implemented `insertDerivedDates`/`insertRiskFlags`, marks the
+  document `derived`. This is the thin I/O boundary the ADR at
+  `lib/dates/` landing already called for — no logic of its own beyond
+  wiring. Verified with a real-DB Vitest test (rows actually land in
+  `derived_dates`/`risk_flags`, not just returned in memory), plus a live
+  run of the full six-stage chain (ingest → extract → verify → persist →
+  derive) against the real E-Loan fixture: matches the earlier live
+  extract/verify run exactly — the three date fields that weren't
+  extracted on that fixture correctly block with specific reasons, the
+  one grounded risk field (`early_termination_right`) correctly shows
+  `present: true`, the other three correctly block rather than assert
+  absence. Full suite now 36 tests, all passing; cleaned up the live-check
+  document/rows/cache afterward (throwaway verification, not seed data).
+  `npm run build`, `npm run lint`, `npx tsc --noEmit` all pass.
+- Fixture-seeding step implemented — `lib/db/seed.ts` (`npm run db:seed`),
+  a hand-authored 10-entry manifest (slug, filename, title — titles pulled
+  from each lease's actual property/tenant per
+  `fixtures/leases/SOURCES.md`, not auto-generated from the filename
+  slug) registering each `fixtures/leases/*.pdf` as a `documents` row via
+  the already-implemented `insertDocument`. Idempotent (`getDocumentBySlug`
+  check before insert, so re-running skips what's already there) and
+  intentionally cheap — it only creates rows (`status: "pending"`), it does
+  not run the pipeline against them; that's still a separate, costly,
+  explicit step against real Claude calls for 10 documents, not something
+  to trigger as a side effect of seeding. Tested against the real db (all
+  10 register, idempotent re-run, and each manifest filename is checked to
+  actually exist on disk — catches drift between the manifest and
+  `fixtures/leases/`). Updated `README.md`'s "Running it" section, which
+  previously skipped straight to `npm run dev` as if the seeded database
+  already existed — added the `db:migrate`/`db:seed` steps and corrected
+  the claim that the app already runs "against the seeded SQLite
+  database" (it's still on mock UI data — see `surfacePrep` below). Full
+  suite now 38 tests, all passing. `npm run build`, `npm run lint`,
+  `npx tsc --noEmit` all pass. Ran `db:seed` for real against the local
+  `attest.db` after tests (which clean up their own seeded rows, same as
+  every other test in this codebase) — 10 documents now registered
+  locally, `status: "pending"` since the pipeline hasn't run against them
+  yet.
+- `lib/pipeline/surfacePrep.ts` (stage 6/6, the last unimplemented pipeline
+  stage) implemented — loads the latest run's extractions/derived dates/
+  risk flags via `lib/db`, then shapes them per its existing type contract:
+  `fieldSections` (extractions grouped by field group), `trackerCategories`
+  (`grounded`/`total` per group — `total` is the full 18-field spec count
+  from `lib/pipeline/fields.ts`, not just what got extracted, so a
+  half-extracted document shows real progress instead of 100%),
+  `queueItems` (fields with status `review` or `blocked` — the below-
+  threshold review queue), and `criticalDates`/`riskFlags` passed through
+  as-is. All four collections are sorted into a fixed canonical order
+  (field spec order for fields/queue, a hardcoded chronological order for
+  the 4 date types, spec-declaration order for the 4 risk flags) rather
+  than trusting SQLite row order, which isn't a guaranteed-stable contract
+  for this. Per the stage's own doc comment, this returns domain data
+  (`ExtractionField[]`, `DerivedDate[]`, `RiskFlag[]`) — it deliberately
+  does **not** try to match `app/documents/_lib/review-data.ts`'s
+  presentational mock shapes (formatted citation strings like `"p.1 ·
+  ..."`, timeline `position` percentages); that formatting is `app/`'s job
+  per the existing architecture, not derivation's.
+  Verified against a real-DB test (grouping, tracker counts against the
+  full spec, queue filtering, ordering — all asserted with fields
+  deliberately inserted out of canonical order, to prove sorting is real
+  and not just accidentally-correct insertion order) and a **live run of
+  the complete six-stage chain** against the real E-Loan fixture — every
+  stage, ingest through surfacePrep, in one pass. Full suite now 43 tests,
+  all passing. `npm run build`, `npm run lint`, `npx tsc --noEmit` all
+  pass. All six pipeline stages now have real implementations.
+
 ## In Progress
 
 - None — UI shell is paused pending the backend pipeline; the skeleton is
-  in place but no stage has real logic yet.
+  in place but no stage has real logic yet, even though every backend
+  stage behind it is now real. Next session should rewire the screens.
 
 ## Next Up
 
-1. `lib/pipeline/derive.ts` — wires `lib/dates/` to `lib/db`: load an
-   extraction run, call `deriveCriticalDates`/`deriveRiskFlags`, persist
-   the results to `derived_dates`/`risk_flags`.
-2. A real fixture-seeding step (registers each `fixtures/leases/*.pdf` as a
-   `documents` row) — ingest assumes the row already exists, and nothing
-   creates it yet; needed before the real pipeline can run against the
-   full starter set or the UI can rewire off mock data.
-3. Rewire the four existing screens from mock arrays
+1. Rewire the four existing screens from mock arrays
    (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
-   `lib/db` queries, and replace the doc-viewer skeleton with a real
-   `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-4. Only once the pipeline is stable end to end: `evals/` harness against the
+   `lib/db` queries via `surfacePrep`, and replace the doc-viewer skeleton
+   with a real `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
+2. Only once the pipeline is stable end to end: `evals/` harness against the
    gold set.
 
 ## Open Questions
