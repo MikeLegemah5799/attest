@@ -488,25 +488,163 @@ Update this file after every meaningful implementation change.
     labels instead of 18). `npm run build`, `npm run lint`,
     `npx tsc --noEmit` all pass.
 
+- Real client-side PDF viewer with click-to-source highlighting landed,
+  replacing the doc-viewer placeholder text — the last of the four screens
+  now runs on something real end to end.
+  - **`lib/pipeline/runDocument.ts`** (new) — a thin orchestrator (ingest →
+    extract → verify → persist → derive, one call per stage, no logic of
+    its own) plus a `tsx`-runnable CLI (`npm run pipeline:run -- <slug...>`)
+    for driving the pipeline against seeded documents from the command
+    line, the same sequence each stage's own live end-to-end check already
+    used by hand. Skips ingest once a document is past `pending` (ingest's
+    `pages` insert is unique on `(documentId, pageNumber)`, not safe to
+    re-run) so a retry after a later-stage failure doesn't need manual
+    cleanup first.
+  - **`app/api/documents/[slug]/pdf/route.ts`** (new) — the project's first
+    route handler; streams a seeded lease's PDF bytes from
+    `fixtures/leases/` by slug for the client viewer to fetch. No logic
+    beyond the filename lookup (code-standards.md: source PDFs live on the
+    filesystem, not as DB blobs).
+  - **`components/attest/CitationHighlight.tsx`** (new) — the PDF-viewer
+    overlay component ui-context.md names explicitly, alongside
+    `ConfidenceBadge`. Purely presentational: given a pixel rect, renders
+    the highlighted-span box; owns no PDF-coordinate math itself.
+  - **`app/documents/[slug]/_components/PdfViewer.tsx`** (new, client) —
+    renders the current page to a `<canvas>` via `pdfjs-dist`'s *browser*
+    build (`import "pdfjs-dist"`), a different module surface than
+    `lib/pdf/`'s Node ("legacy") build used server-side — no canvas/worker
+    APIs exist in the legacy build, so this talks to pdfjs-dist directly
+    rather than through that wrapper, fully typed via the package's own
+    shipped `.d.ts` (no `any`). Worker script is resolved via the
+    bundler-recognized `new URL("pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url)` pattern rather than a manual `public/` copy.
+    `BoundingBox`es (PDF points at scale 1, per `lib/types.ts`) are
+    converted to on-screen pixels by multiplying by the page's current
+    render scale, computed from the container's actual width so the page
+    always fits the pane.
+  - **`app/documents/[slug]/_components/ReviewWorkspace.tsx`** (new,
+    client) — owns the one piece of state that has to live above both
+    panes (which field is selected, which page the viewer shows), per
+    code-standards.md's "Only the PDF viewer, field-click highlighting...
+    need 'use client'"; `page.tsx` stays a server component for the actual
+    data fetch and just passes shaped data down. Clicking a field card
+    navigates the viewer to that field's cited page and highlights its
+    evidence span, exactly as ui-context.md's Layout Patterns describes;
+    the pager's prev/next buttons (previously inert) now actually change
+    pages. A field with no `boundingBox` (ungrounded/blocked) still
+    navigates to its cited page, just with no highlight drawn — no crash.
+  - `app/documents/_lib/review-data.ts`'s `Field` type gained `pageNumber`/
+    `boundingBox` (previously collapsed into a display-only citation
+    string) so the click handler has real coordinates to act on;
+    `app/lib/documents.ts`'s `getDocumentDetail` now also returns
+    `pageCount` for the pager's "page X / N" display.
+  - Verified against a real running dev server via a scripted Playwright
+    session (no `chromium-cli` available in this environment; adapted the
+    `run` skill's Electron-pattern fallback) against the real, fully
+    processed `eloan-metro-square-jacksonville` document: real PDF text
+    renders on canvas (not the old skeleton placeholder), the pager
+    shows real page counts and prev/next both work, clicking a field on a
+    different page (e.g. Base Rent, p.8) navigates the viewer there and
+    draws a highlight box over exactly the cited evidence text, and
+    clicking a `blocked` field (null `boundingBox`) navigates without
+    drawing a stray highlight or erroring. Zero browser console errors
+    across all of this, including pdfjs-dist worker loading — the one real
+    risk point flagged going in. `npm run build` produces one Turbopack
+    warning ("Package pdfjs-dist can't be external... require() resolves
+    to a EcmaScript module") from `serverExternalPackages: ["pdfjs-dist"]`
+    (needed for `lib/pdf/`'s server-side Node build) colliding with the
+    client viewer's worker asset resolution during the RSC client-boundary
+    compile pass; harmless in practice (confirmed via the real-browser
+    check above — the asset still bundles and the worker still loads) but
+    left as a known, understood cosmetic build warning rather than chasing
+    a fix with uncertain payoff. `npm run lint`, `npx tsc --noEmit`, and
+    the full 57-test suite all still pass.
+- All 10 seeded documents now fully processed end to end (ingest → derive)
+  via `lib/pipeline/runDocument.ts` — the documents list is a real
+  populated demo now, not mostly `0%`/`—` rows.
+  - **A real incident during this session, worth recording plainly**: while
+    clearing a leftover local dev-server process, `attest.db-shm`/
+    `attest.db-wal` were deleted while the actual running dev server still
+    held an open `better-sqlite3` WAL-mode connection — this discarded
+    that connection's not-yet-checkpointed writes, silently reverting 3 of
+    the 6 just-processed documents back to `pending` and leaving a 4th
+    stuck mid-pipeline (extracted but not verified/persisted/derived).
+    `PRAGMA integrity_check` confirmed the database itself stayed
+    structurally sound (nothing corrupted, just lost writes); the fix was
+    just re-running `runDocument` for the 4 affected slugs — safe to do
+    because ingest's status-gate (`pending`-only) meant it correctly
+    skipped re-ingesting the one document whose `pages` rows had survived,
+    and extract/verify/persist/derive are all safe to re-run regardless
+    (immutable, new-`runId`-per-run by design). Lesson: never touch a
+    SQLite WAL/SHM file directly while any process might hold the
+    connection open — there was no reason to touch them at all here.
+  - This run also hit the Anthropic account's credit balance running out
+    mid-batch (a real `400 invalid_request_error`, not a bug) — paused and
+    surfaced it to the user directly rather than guessing at a workaround;
+    resumed automatically via a background retry loop once credits were
+    topped up.
+- **3 more documents gold-labeled** (7 of up to 20 target documents now
+  done): `tekelec-morrisville-paramount-parkway.json`,
+  `radiant-systems-centreport-fort-worth.json`,
+  `avi-biopharma-north-creek-bothell.json` — same close-reading standard as
+  the first four (`pdftotext -layout` plus targeted `grep` per clause).
+  - **Two genuinely new derived-date situations, distinct from the first
+    four documents' patterns**: Tekelec has a directly-stated Commencement
+    Date but *no* verbatim Expiration Date anywhere in the text (only
+    computable from Commencement + the stated 9-year Term) — gold-labeled
+    with the computed value but flagged as an expected miss for both the
+    `expiration_date` field and the `expiration` derived date, since
+    grounding (invariant 1) can't support a value with no quotable source,
+    even though it's the objectively correct value. Confirmed by a real
+    pipeline run: `commencement` computed correctly (2009-08-01),
+    `expiration` correctly blocked, exactly as predicted. Tekelec's
+    escalation is also CPI-indexed (not a fixed percentage) — the first
+    fixture to test `next_escalation`'s "annual" cadence-recognition
+    against a *variable-amount* but still annually-timed escalation;
+    predicted and confirmed it computes correctly (2010-08-01), since
+    `deriveNextEscalationDate` only needs the word "annual" in the
+    extracted text and never has to interpret the CPI amount itself — a
+    useful positive contrast to heritage-bank's `next_escalation` miss.
+  - avi-biopharma has both Commencement *and* Expiration stated as fixed
+    calendar dates directly in its Basic Lease Information table (the
+    first document where neither needs computing) — real `commencement`/
+    `expiration` gold labels, both confirmed correct in a real run.
+  - radiant-systems keeps E-Loan's conditional-commencement pattern (no
+    fixed calendar date derivable at all), so — like E-Loan — deliberately
+    gets no commencement/expiration/next_escalation derived-date labels.
+  - No co-tenancy or percentage-rent clauses in any of the 3 (confirmed by
+    full-text search each time, not assumed) — continues the pattern
+    already measured across the first four documents.
+  - Ran `npm run db:seed-gold` and `npm run eval` after each document
+    landed, not just at the end — `totalFields`/`totalDates` grew exactly
+    as expected each time (108 → 126 fields, 6 → 8 dates) with no
+    `unrecognized fieldKey` throws, confirming each file's `fieldKey`s
+    were valid before moving to the next document. Current real numbers
+    across all 7 labeled documents: **36/126 fields (28.6%), 5/8 derived
+    dates (62.5%)**.
+  - Full suite still 57 tests (gold files aren't test-covered beyond
+    `seedGold.test.ts`'s idempotency check, which now covers 115 labels
+    instead of 75). `npm run build`, `npm run lint`, `npx tsc --noEmit`
+    all pass.
+
 ## In Progress
 
-- None. 4 of up to 20 target documents are gold-labeled and fully
-  processed; everything else (pipeline, UI, eval mechanism) is wired end
-  to end.
+- None. 7 of up to 20 target documents are gold-labeled; all 10 seeded
+  documents are fully processed; PDF viewer, pipeline, UI, and eval
+  mechanism are all wired end to end on real data.
 
 ## Next Up
 
-1. Real `pdfjs-dist`-rendered PDF viewer with click-to-source highlighting,
-   replacing the placeholder text in the review workspace's doc-viewer
-   pane — the one piece of the four screens still not wired to anything
-   real.
-2. Run the full pipeline against the remaining 6 seeded-but-unprocessed
-   documents (4 of 10 are now processed) — needed before the documents
-   list looks like a populated demo rather than mostly `0%`/`—` rows.
-3. More gold-labeling, if there's time — 4 of up to 20 target documents
-   done. Each one so far has taken close reading of a full lease (~20-50
-   pages) across ~10-15 targeted clause lookups; that's the real
-   per-document cost to weigh against how much more eval signal is needed.
+1. More gold-labeling, if there's time — 7 of up to 20 target documents
+   done (3 remain from the 10-document starter set: `8x8-sunnyvale-maude-
+   ave`, `fhlb-seattle-century-square`,
+   `entropic-communications-sorrento-san-diego`). Each document has taken
+   close reading of a full lease (~20-90 pages) across ~10-15 targeted
+   clause lookups; that's the real per-document cost to weigh against how
+   much more eval signal is needed before Friday's submission.
+2. Self-consistency scoring (see Open Questions) is still the one
+   trust-layer signal from project-overview.md not yet built, if there's
+   time after gold-labeling.
 
 ## Open Questions
 

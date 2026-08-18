@@ -1,0 +1,110 @@
+{
+  "slug": "tekelec-morrisville-paramount-parkway",
+  "labels": [
+    {
+      "fieldKey": "landlord_name",
+      "expectedValue": "Duke Realty Limited Partnership, an Indiana limited partnership doing business in North Carolina as Duke Realty of Indiana Limited Partnership",
+      "notes": "p.1, opening paragraph"
+    },
+    {
+      "fieldKey": "tenant_name",
+      "expectedValue": "Tekelec, a California corporation doing business in North Carolina as Tekelec, Inc.",
+      "notes": "p.1, opening paragraph"
+    },
+    {
+      "fieldKey": "premises_address",
+      "expectedValue": "Suite 100 of the building located at 5200 East Paramount Parkway, Morrisville, North Carolina, 27560, within Perimeter Park",
+      "notes": "p.1, Section 1.01(a)"
+    },
+    {
+      "fieldKey": "rentable_square_feet",
+      "expectedValue": "154,853",
+      "notes": "p.1, Section 1.01(b)"
+    },
+    {
+      "fieldKey": "commencement_date",
+      "expectedValue": "August 1, 2009",
+      "notes": "p.1, Section 1.01(g). Stated directly as fact, not conditional — this document gets a real commencement derived-date gold label."
+    },
+    {
+      "fieldKey": "expiration_date",
+      "expectedValue": "July 31, 2018",
+      "notes": "Computed from Section 1.01(g)'s Commencement Date (August 1, 2009) plus Section 1.01(h)'s 9-year Lease Term. Unlike heritage-bank-walnut-creek-ygnacio-plaza, this exact date never appears verbatim anywhere in the lease body (confirmed: no occurrence of \"2018\" anywhere in the text) — there's no rent schedule table or other independent passage to ground it against. Expected to score as a genuine miss for both the expiration_date field and the expiration derived date, since grounding (invariant 1) structurally can't support a value with no quotable source text, even though the value itself is correctly computable. A real, informative gap distinct from E-Loan's conditional-commencement case (no fixed date exists there) — here a fixed date exists but the lease never restates it."
+    },
+    {
+      "fieldKey": "initial_term_length",
+      "expectedValue": "Nine (9) years",
+      "notes": "p.1, Section 1.01(h)"
+    },
+    {
+      "fieldKey": "base_rent",
+      "expectedValue": "$2,322,795.00 per annum ($193,566.25 per month) for Year 1; Years 2-9 are subject to the BLS Index-based escalation and rent-abatement schedule in Section 3.01",
+      "notes": "p.1, Section 1.01(d)-(e)"
+    },
+    {
+      "fieldKey": "escalation_type",
+      "expectedValue": "CPI-indexed annual escalation, tied to the BLS Consumer Price Index (CPI-W), collared between a 1% minimum and a 2.5% maximum increase per lease year",
+      "notes": "p.3, Section 3.01"
+    },
+    {
+      "fieldKey": "escalation_schedule",
+      "expectedValue": "Minimum Annual Rent increases on each anniversary of the Commencement Date by the BLS Index's percent change over the 12-month period ending 2 months before the current lease year ends, floored at 1% and capped at 2.5%. Tenant is also excused from paying Monthly Rental Installments for four months each in 2011, 2012, and 2015 (July 1 - October 31 of each of those years).",
+      "notes": "p.3-4, Section 3.01"
+    },
+    {
+      "fieldKey": "renewal_option_terms",
+      "expectedValue": "Two successive Extension Terms of five (5) years each, on the same terms as the original Lease, with Minimum Annual Rent reset to Landlord's then-quoted market rate for comparable Research Triangle Park space (but never less than the highest Minimum Annual Rent paid during the immediately preceding term); improvement allowances/concessions from the original Term do not carry over.",
+      "notes": "p.22, Section 17.01"
+    },
+    {
+      "fieldKey": "renewal_notice_deadline",
+      "expectedValue": "Twelve (12) months prior to the expiration of the then-current term",
+      "notes": "p.22, Section 17.01(a)"
+    },
+    {
+      "fieldKey": "expense_structure",
+      "expectedValue": "Triple net (NNN) — Tenant's Proportionate Share is 100% (single-tenant building); Tenant pays the full Annual Rental Adjustment (Building Operating Expenses, Building Common Area expenses, and a prorated share of Park Common Area expenses) as Additional Rent, with no base year or expense stop mentioned.",
+      "notes": "p.1 Section 1.01(c); p.3-4 Sections 3.01-3.02"
+    },
+    {
+      "fieldKey": "security_deposit",
+      "expectedValue": "None — Article 4 (Security Deposit) is marked \"Intentionally Omitted.\"",
+      "notes": "p.2, Article 4"
+    },
+    {
+      "fieldKey": "early_termination_right",
+      "expectedValue": "Yes, in two circumstances: (1) Casualty — if the Premises can't be repaired within 210 days of the casualty date, either party may terminate on 60 days' notice; if destroyed by an uninsured casualty (or insurance proceeds are insufficient/withheld), Landlord alone may terminate on 60 days' notice. (2) Eminent domain — Landlord may terminate if a substantial part of the Building/Common Areas is taken, making the Premises commercially impracticable for Tenant's use; Tenant may terminate if any part taken makes the Premises commercially impracticable for its use.",
+      "notes": "p.13, Article 9 (Casualty); p.13, Article 10 (Eminent Domain)"
+    },
+    {
+      "fieldKey": "co_tenancy_clause",
+      "expectedValue": "Not present — the Lease contains no co-tenancy clause (and Tenant occupies the entire single-tenant Building, so one wouldn't apply).",
+      "notes": "Confirmed by full-text search — no occurrence of \"co-tenancy\" or equivalent language."
+    },
+    {
+      "fieldKey": "assignment_subletting_consent",
+      "expectedValue": "Yes — Landlord's prior written consent is required for any assignment or sublease (not to be unreasonably withheld, conditioned, or delayed), except that Tenant may, without consent but on 10 days' notice, transfer to an affiliate (an entity controlling, controlled by, or under common control with Tenant), a merger/consolidation successor or acquirer of substantially all of Tenant's stock/assets, or effect a public stock offering.",
+      "notes": "p.14, Section 11.01; p.14-15, Section 11.02"
+    },
+    {
+      "fieldKey": "percentage_rent_clause",
+      "expectedValue": "Not present — rent is Minimum Annual Rent plus the Annual Rental Adjustment expense pass-through only; no percentage-of-sales rent component.",
+      "notes": "Confirmed by full-text search — no occurrence of \"percentage rent\" or equivalent language."
+    },
+    {
+      "fieldKey": "commencement",
+      "expectedValue": "2009-08-01",
+      "notes": "Derived-date gold label (dateType). See commencement_date above — a genuinely fixed, directly-stated Commencement Date."
+    },
+    {
+      "fieldKey": "expiration",
+      "expectedValue": "2018-07-31",
+      "notes": "Derived-date gold label. See expiration_date above for why this is expected to score as a miss despite being the correct value — expiration is a direct pass-through of the (structurally ungroundable) expiration_date field per lib/dates/criticalDates.ts."
+    },
+    {
+      "fieldKey": "next_escalation",
+      "expectedValue": "2010-08-01",
+      "notes": "Derived-date gold label — the first anniversary of the Commencement Date. Unlike heritage-bank-walnut-creek-ygnacio-plaza's next_escalation (a documented miss), this one is expected to actually compute correctly: lib/dates/criticalDates.ts's deriveNextEscalationDate only requires the word \"annual\" to appear in the extracted escalation_type/escalation_schedule text and then adds one year to the commencement date — it never has to interpret the CPI-indexed amount itself (only pdf.js-extracted rate text would need that), so the fact that the rent increase's magnitude is CPI-variable doesn't block the date computation the way an unrecognized cadence would. A useful contrast case to Heritage Bank's."
+    }
+  ]
+}

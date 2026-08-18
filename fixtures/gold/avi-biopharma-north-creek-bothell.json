@@ -1,0 +1,105 @@
+{
+  "slug": "avi-biopharma-north-creek-bothell",
+  "labels": [
+    {
+      "fieldKey": "landlord_name",
+      "expectedValue": "S/I North Creek VII LLC, a Washington limited liability company",
+      "notes": "p.iii (opening paragraph) and p.1, Section 1.01(a)"
+    },
+    {
+      "fieldKey": "tenant_name",
+      "expectedValue": "AVI BioPharma, Inc., an Oregon corporation",
+      "notes": "p.iii (opening paragraph) and p.1, Section 1.01(c)"
+    },
+    {
+      "fieldKey": "premises_address",
+      "expectedValue": "Building Q, 19909 120th Avenue NE, Bothell, Washington 98011 (within the Schnitzer North Creek project / North Creek Technology Campus II)",
+      "notes": "p.1, Section 1.01(h)-(i)"
+    },
+    {
+      "fieldKey": "rentable_square_feet",
+      "expectedValue": "8,398",
+      "notes": "p.1, Section 1.01(i)"
+    },
+    {
+      "fieldKey": "commencement_date",
+      "expectedValue": "November 8, 2010",
+      "notes": "p.1, Section 1.01(k). Stated directly as fact — this document gets real commencement/expiration derived-date gold labels, since both endpoints of the Term are given as fixed calendar dates (Section 1.01(j)), not a conditional formula."
+    },
+    {
+      "fieldKey": "expiration_date",
+      "expectedValue": "December 31, 2012",
+      "notes": "p.1, Section 1.01(j). Stated directly as fact, alongside the Commencement Date — no computation needed, unlike tekelec-morrisville-paramount-parkway."
+    },
+    {
+      "fieldKey": "initial_term_length",
+      "expectedValue": "November 8, 2010 through December 31, 2012 (approximately 25.75 months) — the Lease states the Term only as these two fixed dates (Section 1.01(j)); no separate duration figure (e.g. \"25 months\") appears anywhere in the text.",
+      "notes": "p.1, Section 1.01(j); p.5, Section 4.01"
+    },
+    {
+      "fieldKey": "base_rent",
+      "expectedValue": "$0.00/month from 11/8/10-4/30/11 (free rent); $16.00/rsf/year ($11,197.33/month) from 5/1/11-10/31/11; $16.50/rsf/year ($11,547.25/month) from 11/1/11-10/31/12; $17.00/rsf/year ($11,897.17/month) from 11/1/12-12/31/12",
+      "notes": "p.1-2, Section 1.01(l)"
+    },
+    {
+      "fieldKey": "escalation_type",
+      "expectedValue": "Fixed step-rate schedule tied to specific calendar dates, not an annual percentage/amount increase",
+      "notes": "p.1-2, Section 1.01(l) Base Rent table. The step dates (5/1, 11/1) don't align to the November 8 Commencement Date anniversary, so this isn't an anniversary-based annual escalation."
+    },
+    {
+      "fieldKey": "escalation_schedule",
+      "expectedValue": "Rate steps from $0.00 to $16.00/rsf/year on 5/1/11, to $16.50/rsf/year on 11/1/11, to $17.00/rsf/year on 11/1/12 — see the Base Rent table for exact monthly dollar amounts at each step.",
+      "notes": "p.1-2, Section 1.01(l) — same source as base_rent"
+    },
+    {
+      "fieldKey": "renewal_option_terms",
+      "expectedValue": "One additional two (2) year Extended Term at fair market Base Rent (determined by Landlord's initial determination, tenant objection, and — if unresolved — a binding 2-or-3-appraiser process), floored at the Base Rent in effect during the last month of the initial Term; no further improvements/allowances and no further extension options apply to the Extended Term.",
+      "notes": "p.5-6, Section 4.03"
+    },
+    {
+      "fieldKey": "renewal_notice_deadline",
+      "expectedValue": "No less than nine (9) months nor more than twelve (12) months prior to the date the Term would otherwise expire",
+      "notes": "p.5, Section 4.03. A window, not a single deadline."
+    },
+    {
+      "fieldKey": "expense_structure",
+      "expectedValue": "Triple net (NNN), no base year — the Lease's own cover page identifies it as \"SCHNITZER-STANDARD FORM OFFICE LEASE (TRIPLE NET)\"; Tenant pays its full Tenant's Share (12.3% of Building, 3.0% of Property, 0.8% of Project) of Operating Expenses as Additional Rent from day one, estimated monthly and trued up in an annual reconciliation.",
+      "notes": "Cover page; p.1, Section 1.01(o)-(q); p.8, Section 6.01"
+    },
+    {
+      "fieldKey": "security_deposit",
+      "expectedValue": "$11,897.17",
+      "notes": "p.1, Section 1.01(n)"
+    },
+    {
+      "fieldKey": "early_termination_right",
+      "expectedValue": "Yes, in three circumstances: (1) Damage/destruction — Tenant may terminate if Landlord determines the Building/Premises can't be restored within the earlier of 270 days or the Term's expiration; Landlord may terminate on the same 270-day threshold, on an uninsured casualty (60 days' notice), if a mortgagee requires the insurance proceeds (15 days' notice), or on excessive damage during the Term's last 12 months. (2) Eminent domain — either party may terminate if a taking substantially interferes with its use of the Premises/Building/Project. (3) Assignment recapture — if Tenant requests consent to assign the Lease or sublease the Premises, Landlord may instead elect to terminate the Lease (or terminate as to the subleased portion) rather than consenting or refusing.",
+      "notes": "p.24-26, Article XI (Damage and Destruction); p.26, Section 12.01 (Eminent Domain); p.20-21, Section 15.01(c) (assignment recapture right)"
+    },
+    {
+      "fieldKey": "co_tenancy_clause",
+      "expectedValue": "Not present — the Lease contains no co-tenancy clause.",
+      "notes": "Confirmed by full-text search — no occurrence of \"co-tenancy\" or equivalent language."
+    },
+    {
+      "fieldKey": "assignment_subletting_consent",
+      "expectedValue": "Yes — Landlord's prior written consent is required for any assignment, sublease, or encumbrance, which Landlord may withhold or condition in its sole discretion (not merely a reasonableness standard); Landlord may alternatively elect to terminate the Lease (or the subleased portion) rather than consent or refuse.",
+      "notes": "p.20-21, Section 15.01"
+    },
+    {
+      "fieldKey": "percentage_rent_clause",
+      "expectedValue": "Not present — rent is Base Rent plus Additional Rent (Operating Expenses pass-through) only; no percentage-of-sales rent component.",
+      "notes": "Confirmed by full-text search — no occurrence of \"percentage rent\" or equivalent language."
+    },
+    {
+      "fieldKey": "commencement",
+      "expectedValue": "2010-11-08",
+      "notes": "Derived-date gold label (dateType). See commencement_date above — directly stated, fixed."
+    },
+    {
+      "fieldKey": "expiration",
+      "expectedValue": "2012-12-31",
+      "notes": "Derived-date gold label. See expiration_date above — directly stated, fixed, and unlike tekelec-morrisville-paramount-parkway this exact date is itself verbatim in the text (Section 1.01(j)), so it should be independently groundable, not just computable."
+    }
+  ]
+}
