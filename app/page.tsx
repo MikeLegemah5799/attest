@@ -1,51 +1,5 @@
-type Document = {
-  name: string;
-  type: string;
-  verifiedFilled: number;
-  verifiedTotal: number;
-  verifiedPercent: number;
-  flags: number;
-  expires: string;
-};
-
-const documents: Document[] = [
-  {
-    name: "123 Main St — Office",
-    type: "Office",
-    verifiedFilled: 3,
-    verifiedTotal: 5,
-    verifiedPercent: 82,
-    flags: 2,
-    expires: "Mar 2027",
-  },
-  {
-    name: "400 Park Ave — Suite 1200",
-    type: "Office",
-    verifiedFilled: 5,
-    verifiedTotal: 5,
-    verifiedPercent: 100,
-    flags: 0,
-    expires: "Nov 2028",
-  },
-  {
-    name: "Riverside Plaza — Bldg C",
-    type: "Office",
-    verifiedFilled: 2,
-    verifiedTotal: 5,
-    verifiedPercent: 44,
-    flags: 4,
-    expires: "Jun 2026",
-  },
-  {
-    name: "Harbor Point — Floor 3",
-    type: "Office",
-    verifiedFilled: 4,
-    verifiedTotal: 5,
-    verifiedPercent: 91,
-    flags: 1,
-    expires: "Aug 2029",
-  },
-];
+import Link from "next/link";
+import { documents } from "./lib/documents";
 
 function VerifiedDots({ filled, total, percent }: { filled: number; total: number; percent: number }) {
   return (
@@ -105,8 +59,12 @@ export default function Home() {
           </thead>
           <tbody>
             {documents.map((doc) => (
-              <tr key={doc.name}>
-                <td>{doc.name}</td>
+              <tr key={doc.slug}>
+                <td>
+                  <Link href={`/documents/${doc.slug}`} className="row-link">
+                    {doc.name}
+                  </Link>
+                </td>
                 <td>{doc.type}</td>
                 <td>
                   <VerifiedDots
