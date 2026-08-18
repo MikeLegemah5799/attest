@@ -102,14 +102,10 @@ describe("runEval (real db, synthetic gold labels — no real gold-labeled fixtu
     ];
     insertDerivedDates(dates);
 
-    const gold: NewGoldLabel[] = [
-      { documentId, fieldKey: "landlord_name", expectedValue: "Acme Properties LLC", notes: null },
-      { documentId, fieldKey: "tenant_name", expectedValue: "Foo Corp", notes: null },
-      { documentId, fieldKey: "commencement_date", expectedValue: "2024-01-15", notes: null },
-      { documentId, fieldKey: "expiration_date", expectedValue: "December 31, 2029", notes: null }, // extracted value is a year off — wrong
-      { documentId, fieldKey: "expiration", expectedValue: "2029-12-31", notes: null }, // derived date, exact match
-    ];
-    insertGoldLabels(gold);
+    // Gold labels are deliberately NOT inserted here — the real dev db may
+    // already have real gold data (fixtures/gold/*.json) that also scores,
+    // so each test below measures its own contribution as a delta against
+    // a freshly-computed baseline instead of asserting exact totals.
   });
 
   afterAll(() => {
@@ -118,32 +114,46 @@ describe("runEval (real db, synthetic gold labels — no real gold-labeled fixtu
   });
 
   it("scores field and date accuracy separately, treating a missing prediction as incorrect", async () => {
+    const baseline = await runEval("baseline");
+
+    const gold: NewGoldLabel[] = [
+      { documentId, fieldKey: "landlord_name", expectedValue: "Acme Properties LLC", notes: null },
+      { documentId, fieldKey: "tenant_name", expectedValue: "Foo Corp", notes: null },
+      { documentId, fieldKey: "commencement_date", expectedValue: "2024-01-15", notes: null },
+      { documentId, fieldKey: "expiration_date", expectedValue: "December 31, 2029", notes: null }, // extracted value is a year off — wrong
+      { documentId, fieldKey: "expiration", expectedValue: "2029-12-31", notes: null }, // derived date, exact match
+    ];
+    insertGoldLabels(gold);
+
     const run = await runEval("test-version");
 
     expect(run.promptVersion).toBe("test-version");
     expect(run.finishedAt).not.toBeNull();
 
+    const runFields = run.fieldAccuracy!;
+    const baselineFields = baseline.fieldAccuracy!;
+    const runDates = run.dateAccuracy!;
+    const baselineDates = baseline.dateAccuracy!;
+
     // Field accuracy: landlord_name correct (exact), tenant_name incorrect
     // (never extracted), commencement_date correct (date-format-tolerant
     // match), expiration_date incorrect (extracted, but the wrong year) —
     // the derived "expiration" date-type gold label is scored separately,
-    // not counted here.
-    expect(run.fieldAccuracy).toEqual({
-      totalFields: 4,
-      correctFields: 2,
-      accuracy: 2 / 4,
-      byFieldGroup: {
-        parties_premises: { total: 2, correct: 1 },
-        term: { total: 2, correct: 1 },
-      },
-    });
+    // not counted here. Measured as a delta against the baseline so this
+    // test is robust to whatever other real gold-labeled documents already
+    // exist in the shared dev db.
+    expect(runFields.totalFields - baselineFields.totalFields).toBe(4);
+    expect(runFields.correctFields - baselineFields.correctFields).toBe(2);
+    for (const group of ["parties_premises", "term"] as const) {
+      const before = baselineFields.byFieldGroup[group] ?? { total: 0, correct: 0 };
+      const after = runFields.byFieldGroup[group]!;
+      expect(after.total - before.total).toBe(2);
+      expect(after.correct - before.correct).toBe(1);
+    }
 
     // Date accuracy: only the "expiration" gold label is a derived date type.
-    expect(run.dateAccuracy).toEqual({
-      totalDates: 1,
-      correctDates: 1,
-      accuracy: 1,
-    });
+    expect(runDates.totalDates - baselineDates.totalDates).toBe(1);
+    expect(runDates.correctDates - baselineDates.correctDates).toBe(1);
   });
 
   it("throws on a gold label with an unrecognized fieldKey rather than silently ignoring it", async () => {

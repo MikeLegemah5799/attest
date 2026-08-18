@@ -1,0 +1,110 @@
+{
+  "slug": "heritage-bank-walnut-creek-ygnacio-plaza",
+  "labels": [
+    {
+      "fieldKey": "landlord_name",
+      "expectedValue": "101 Ygnacio Plaza Property, LLC",
+      "notes": "p.1, Subparagraph 1(a)"
+    },
+    {
+      "fieldKey": "tenant_name",
+      "expectedValue": "Heritage Bank of Commerce",
+      "notes": "p.1, Subparagraph 1(c) — a California corporation"
+    },
+    {
+      "fieldKey": "premises_address",
+      "expectedValue": "101 Ygnacio Valley Road, Suite 100, Walnut Creek, CA 94596",
+      "notes": "p.1, Subparagraph 1(e)"
+    },
+    {
+      "fieldKey": "rentable_square_feet",
+      "expectedValue": "3,723",
+      "notes": "p.1, Subparagraph 1(h)"
+    },
+    {
+      "fieldKey": "commencement_date",
+      "expectedValue": "August 16, 2007",
+      "notes": "p.1, Subparagraph 1(m). Unlike the other three gold-labeled documents so far, this Lease states the Commencement Date directly as a fact in the Basic Terms (not a conditional formula) — this document does get commencement/expiration derived-date gold labels."
+    },
+    {
+      "fieldKey": "expiration_date",
+      "expectedValue": "August 15, 2014",
+      "notes": "Derived from Subparagraph 1(i) (\"Seven Lease Years\") plus Subparagraph 1(m)'s Commencement Date; confirmed by the Basic Rent schedule in Subparagraph 1(o), whose final period runs \"September 1, 2013, through August 15, 2014.\" Paragraph 3 notes the exact date is formally fixed by a separate Notice of Lease Term Dates (Exhibit D, not included in this exhibit), but the rent table independently confirms this date."
+    },
+    {
+      "fieldKey": "initial_term_length",
+      "expectedValue": "Seven Lease Years",
+      "notes": "p.1, Subparagraph 1(i)"
+    },
+    {
+      "fieldKey": "base_rent",
+      "expectedValue": "$12,285.90 per month ($147,430.80 per annum) for the first full Lease Year (September 1, 2007 through August 31, 2008); $6,341.11 for the partial period August 16-31, 2007.",
+      "notes": "p.1-2, Subparagraph 1(o)"
+    },
+    {
+      "fieldKey": "escalation_type",
+      "expectedValue": "Fixed annual step-schedule (not a flat percentage) — Monthly/Annual Basic Rent increases to specific stated amounts each Lease Year.",
+      "notes": "p.1-2, Subparagraph 1(o) table"
+    },
+    {
+      "fieldKey": "escalation_schedule",
+      "expectedValue": "Aug 16, 2007-Aug 31, 2007: $6,341.11/mo (stub period); Sept 1, 2007-Aug 31, 2008: $147,430.80/yr ($12,285.90/mo); Sept 1, 2008-Aug 31, 2009: $151,853.72/yr ($12,654.48/mo); Sept 1, 2009-Aug 31, 2010: $156,409.34/yr ($13,034.11/mo); Sept 1, 2010-Aug 31, 2011: $161,101.62/yr ($13,425.13/mo); Sept 1, 2011-Aug 31, 2012: $165,934.66/yr ($13,827.89/mo); Sept 1, 2012-Aug 31, 2013: $170,912.70/yr ($14,242.73/mo); Sept 1, 2013-Aug 15, 2014: $176,040.09/yr ($14,670.01/mo).",
+      "notes": "p.1-2, Subparagraph 1(o). Escalation dates anchor to September 1 each year, not to the August 16 Commencement Date anniversary — a real mismatch worth noting for the next_escalation derived date below."
+    },
+    {
+      "fieldKey": "renewal_option_terms",
+      "expectedValue": "Not present — the Lease contains no renewal or extension option. If Tenant holds over past the Term, it becomes a month-to-month tenant at 150% of the Annual Basic Rent (Paragraph 9-area holdover provision) — a holdover penalty, not a renewal right.",
+      "notes": "Confirmed absent from the Table of Contents (no \"Renewal\"/\"Option to Extend\" paragraph among the 51 listed) and by full-text search of the lease body."
+    },
+    {
+      "fieldKey": "renewal_notice_deadline",
+      "expectedValue": "Not applicable — no renewal option exists in this Lease.",
+      "notes": "Same as renewal_option_terms. Deliberately no derived-date gold label for renewal_notice_deadline on this document — there is nothing for the pipeline to compute a deadline from."
+    },
+    {
+      "fieldKey": "expense_structure",
+      "expectedValue": "Base-year gross lease — Tenant's Percentage (4.78%) of 2007 Base Year Operating Expenses (calculated assuming 95% occupancy) is baked into Annual Basic Rent; Tenant separately pays 4.78% of any Operating Expenses increase above that 2007 base year amount as additional rent.",
+      "notes": "p.1, Subparagraph 1(p)-(q) and p.3-4, Paragraph 6(a)"
+    },
+    {
+      "fieldKey": "security_deposit",
+      "expectedValue": "None",
+      "notes": "p.1, Subparagraph 1(r); confirmed by Paragraph 7, \"Intentionally Omitted\""
+    },
+    {
+      "fieldKey": "early_termination_right",
+      "expectedValue": "Yes, in three circumstances: (1) Casualty (\"Damage or Destruction\") — Landlord may elect not to restore, or Tenant may terminate if repair will exceed 270 days, if damage occurs in the last 12 months of the Term and can't be repaired within 30 days, or under several other specified conditions (Paragraph 22). (2) Eminent Domain — either party may terminate on a full or substantially-interfering taking; Landlord may also terminate on a partial taking it elects not to restore (Paragraph 23). (3) Landlord's Right to Cancel — in connection with any proposed assignment or sublease, Landlord may elect to terminate the Lease (or the sublet portion) instead of consenting or refusing (Paragraph 25).",
+      "notes": "p.13-14 (Paragraphs 22, 23) and p.16 (Paragraph 25)"
+    },
+    {
+      "fieldKey": "co_tenancy_clause",
+      "expectedValue": "Not present — the Lease contains no co-tenancy clause.",
+      "notes": "Confirmed by the Table of Contents and full-text search of the lease body"
+    },
+    {
+      "fieldKey": "assignment_subletting_consent",
+      "expectedValue": "Yes — Landlord's prior written consent is required for any assignment, encumbrance, or sublease (not to be unreasonably withheld), with a 50%+ ownership-transfer trigger for entity tenants; unauthorized transfers are voidable and a default. Landlord may instead elect to terminate the Lease (or the sublet portion) rather than consent or refuse, and is entitled to 50% of any excess rent/consideration Tenant receives from an approved transfer.",
+      "notes": "p.16, Paragraph 25"
+    },
+    {
+      "fieldKey": "percentage_rent_clause",
+      "expectedValue": "Not present — no percentage-of-sales rent component; rent is fixed Annual/Monthly Basic Rent (per the step schedule) plus additional rent for above-base-year Operating Expenses only.",
+      "notes": "Confirmed by the Table of Contents and full-text search of the lease body"
+    },
+    {
+      "fieldKey": "commencement",
+      "expectedValue": "2007-08-16",
+      "notes": "Derived-date gold label (dateType, not an extraction field — see lib/dates/criticalDates.ts's CRITICAL_DATE_TYPES). See commencement_date above — this document has a genuinely fixed Commencement Date, unlike the other three gold-labeled documents."
+    },
+    {
+      "fieldKey": "expiration",
+      "expectedValue": "2014-08-15",
+      "notes": "Derived-date gold label. See expiration_date above."
+    },
+    {
+      "fieldKey": "next_escalation",
+      "expectedValue": "2008-09-01",
+      "notes": "The true next escalation date, anchored to September 1 (the Lease's own annual escalation date) rather than the August 16 Commencement Date anniversary. lib/dates/criticalDates.ts's next_escalation deriver computes commencement + 1 year (2008-08-16) when it recognizes an annual cadence, which will NOT match this true date — a known, documented limitation (see progress-tracker.md Open Questions: escalation-date computation assumes the escalation anchors to the commencement anniversary, which isn't true here because of the initial stub period). Kept as a gold label anyway since it's a real, informative miss, not a labeling error."
+    }
+  ]
+}

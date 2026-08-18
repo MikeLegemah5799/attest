@@ -6,7 +6,10 @@
  */
 
 function normalizeText(value: string): string {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
+  // Trailing sentence punctuation is a prose artifact, not a fact — without
+  // stripping it, "...Base Rent." vs "...Base Rent (2.5% increase)" fails
+  // containment purely because of where the period landed.
+  return value.trim().toLowerCase().replace(/\s+/g, " ").replace(/[.,;]+$/, "");
 }
 
 /** Parses a handful of common lease-date formats to an ISO (YYYY-MM-DD) string. */
@@ -47,6 +50,14 @@ function tryParseNumber(value: string): number | null {
   return match ? Number.parseFloat(match[0]) : null;
 }
 
+// A word-count minimum, not a character-count one — "E-Loan, Inc." (2
+// words, 11 characters) is specific enough to trust as a containment
+// match; a 12-character minimum would reject it while accepting equally
+// short but genuinely generic values. Guards against a short, generic
+// gold value (e.g. "yes") coincidentally appearing as a substring of an
+// unrelated answer.
+const MIN_CONTAINMENT_WORDS = 2;
+
 export function fieldsMatch(expected: string, actual: string): boolean {
   const expectedDate = tryParseDate(expected);
   const actualDate = tryParseDate(actual);
@@ -58,5 +69,18 @@ export function fieldsMatch(expected: string, actual: string): boolean {
     return Math.abs(expectedNumber - actualNumber) < 0.005;
   }
 
-  return normalizeText(expected) === normalizeText(actual);
+  const normalizedExpected = normalizeText(expected);
+  const normalizedActual = normalizeText(actual);
+  if (normalizedExpected === normalizedActual) return true;
+
+  // Extracted free text is frequently gold's core answer plus extra
+  // elaboration the model added (e.g. gold "Southpark Corporate Center,
+  // L.L.C." vs extracted "...L.L.C., a Delaware limited liability
+  // company") — treat that as correct rather than penalizing completeness.
+  const [shorter, longer] =
+    normalizedExpected.length <= normalizedActual.length
+      ? [normalizedExpected, normalizedActual]
+      : [normalizedActual, normalizedExpected];
+  const shorterWordCount = shorter.split(/\s+/).filter(Boolean).length;
+  return shorterWordCount >= MIN_CONTAINMENT_WORDS && longer.includes(shorter);
 }

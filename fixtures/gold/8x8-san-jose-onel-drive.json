@@ -1,0 +1,95 @@
+{
+  "slug": "8x8-san-jose-onel-drive",
+  "labels": [
+    {
+      "fieldKey": "landlord_name",
+      "expectedValue": "O'Nel Office Holdings, LLC",
+      "notes": "p.1, recital paragraph"
+    },
+    {
+      "fieldKey": "tenant_name",
+      "expectedValue": "8x8, Inc.",
+      "notes": "p.1, recital paragraph"
+    },
+    {
+      "fieldKey": "premises_address",
+      "expectedValue": "2125 O'Nel Drive, San Jose, California (Santa Clara County)",
+      "notes": "p.1, Section 1"
+    },
+    {
+      "fieldKey": "rentable_square_feet",
+      "expectedValue": "104,657",
+      "notes": "p.1, Section 1"
+    },
+    {
+      "fieldKey": "commencement_date",
+      "expectedValue": "The \"Rent Commencement Date,\" defined as the earliest of (a) August 1, 2012, (b) the date Tenant begins operating out of any portion of the Premises, or (c) the date the TI Work is substantially completed. No single fixed calendar date is determinable from the Lease alone.",
+      "notes": "p.2, Section 2.3. Not a fixed date — derived-date types are deliberately not gold-labeled for this document, same reasoning as eloan-metro-square-jacksonville."
+    },
+    {
+      "fieldKey": "expiration_date",
+      "expectedValue": "The last day of the 87th calendar month following the Rent Commencement Date. No fixed calendar date is stated, since the Rent Commencement Date itself is conditional.",
+      "notes": "p.2, Section 2.3"
+    },
+    {
+      "fieldKey": "initial_term_length",
+      "expectedValue": "87 calendar months from the Rent Commencement Date",
+      "notes": "p.2, Section 2.3"
+    },
+    {
+      "fieldKey": "base_rent",
+      "expectedValue": "$130,821.25 per month (Basic Monthly Rent), following an initial 3-month rent-free period from the Rent Commencement Date",
+      "notes": "p.2, Section 2.1"
+    },
+    {
+      "fieldKey": "escalation_type",
+      "expectedValue": "Fixed percentage annual escalation — 3.0% per year",
+      "notes": "p.2, Section 2.1"
+    },
+    {
+      "fieldKey": "escalation_schedule",
+      "expectedValue": "Basic Monthly Rent increases 3.0% on the day after the 15th calendar month following the Rent Commencement Date, and again on each anniversary of that date thereafter.",
+      "notes": "p.2, Section 2.1"
+    },
+    {
+      "fieldKey": "renewal_option_terms",
+      "expectedValue": "The Lease references a one-time right to extend the Expiration Date \"in accordance with the attached Addendum No. 1\" (Section 2.3), but Addendum No. 1 is not included in this filed exhibit — its specific terms (extension length, rent, notice) are not determinable from the available document.",
+      "notes": "p.2, Section 2.3. Confirmed by full-text search: no \"Addendum\" or \"Extension Term\" text appears anywhere in the 20-page document; it ends at signature blocks."
+    },
+    {
+      "fieldKey": "renewal_notice_deadline",
+      "expectedValue": "Not determinable from this document — the addendum defining the extension mechanics (Addendum No. 1) is referenced but not included in this exhibit.",
+      "notes": "Same gap as renewal_option_terms"
+    },
+    {
+      "fieldKey": "expense_structure",
+      "expectedValue": "Absolute net lease — Tenant pays 100% of Operating Expenses (utilities, maintenance/repair, taxes, insurance, association dues) for the single-tenant Building, beginning on the Rent Commencement Date, unaffected by any re-measurement of the Premises.",
+      "notes": "p.4, Section 9.1 — no pro rata share language since Tenant occupies the entire single-tenant Building"
+    },
+    {
+      "fieldKey": "security_deposit",
+      "expectedValue": "$156,000.00 cash",
+      "notes": "p.2, Section 2.8"
+    },
+    {
+      "fieldKey": "early_termination_right",
+      "expectedValue": "Yes, in two circumstances: (1) Destruction/casualty — Tenant may terminate on 30 days' written notice if restoration isn't legally permitted, the destruction occurs in the Lease's last year, or restoration won't complete within 9 months; Landlord may also terminate under specified conditions (Section 20). (2) Condemnation — the Lease terminates automatically on a full taking of the Premises; Tenant may terminate on a partial taking that leaves the remaining Premises unsuitable, by written notice within 30 days (Section 21).",
+      "notes": "p.11-12, Sections 20 and 21"
+    },
+    {
+      "fieldKey": "co_tenancy_clause",
+      "expectedValue": "Not present — the Lease contains no co-tenancy clause (single-tenant building).",
+      "notes": "Confirmed by full-text search of the lease body"
+    },
+    {
+      "fieldKey": "assignment_subletting_consent",
+      "expectedValue": "Yes — Landlord's prior written consent is required for any assignment, sublease, or a transfer resulting in 50% or more change of beneficial/legal interest in Tenant (not to be unreasonably withheld), with Landlord entitled to half of any transfer profit above the allocable Basic Monthly Rent.",
+      "notes": "p.13-14, Section 22"
+    },
+    {
+      "fieldKey": "percentage_rent_clause",
+      "expectedValue": "Not present — no percentage-of-sales rent component; rent is fixed Basic Monthly Rent plus 100% Operating Expenses pass-through only.",
+      "notes": "Confirmed by full-text search of the lease body"
+    }
+  ]
+}

@@ -382,28 +382,131 @@ Update this file after every meaningful implementation change.
   likely-to-trim scope item). Full suite now 53 tests, all passing;
   `npm run lint` has zero warnings for the first time this session — the
   evals stub's unused-param warnings are gone along with the stub.
+- First real gold-labeled document landed:
+  `fixtures/gold/eloan-metro-square-jacksonville.json` (18 extraction-field
+  labels, hand-read against the actual lease text — `pdftotext -layout`
+  plus targeted `grep` to locate each clause, not skimmed) plus
+  `lib/db/seedGold.ts` (`npm run db:seed-gold`) to sync `fixtures/gold/*.json`
+  into `gold_labels`, idempotent like `db:seed`.
+  - **Deliberately no derived-date gold labels for this document** —
+    E-Loan's Commencement Date is defined conditionally (earlier of
+    possession or substantial-completion delivery, Section 2.1), not as a
+    fixed calendar date, so there's no absolute date to check a computed
+    value against. A real, correct fact about this lease, not a labeling
+    gap.
+  - **Caught a real, source-confirmed typo while labeling**: the renewal
+    notice period reads "six (61 months" in the lease's own text layer —
+    confirmed identical via both `pdftotext` and this project's own
+    `lib/pdf` (pdf.js) extraction, so it's in the source PDF itself, not a
+    tool artifact. Labeled as 6 months (the spelled-out word is
+    unambiguous) with a note explaining the discrepancy.
+  - **Running `npm run eval` against this label set caught two real
+    comparator bugs**, found by actually inspecting a real accuracy
+    number (16.7%) rather than trusting the mechanism because it ran
+    without error:
+    1. `fieldsMatch`'s text fallback required exact equality, so
+       `"Southpark Corporate Center, L.L.C."` (gold) vs `"...L.L.C., a
+       Delaware limited liability company"` (extracted, same fact plus
+       elaboration) scored as wrong. Added a containment fallback (one
+       normalized value fully contained in the other) after exact-match
+       and before giving up.
+    2. The containment fallback's own guard was a 12-character minimum,
+       which rejected `"E-Loan, Inc."` (11 characters, but obviously
+       specific, not generic) as a match for `"E-Loan, Inc., a Delaware
+       corporation"`. Replaced the character-count guard with a
+       **2-word-minimum** guard — the actual property that distinguishes
+       "specific enough to trust as a real match" from "generic enough to
+       risk a coincidental substring," which character count doesn't
+       capture.
+  - Real accuracy after both fixes: **6/18 (33%)** on this document/run.
+    The remaining misses split into two honest categories, not a single
+    "accuracy is low" verdict: (a) fields the model genuinely didn't
+    extract this run (`commencement_date`, `expiration_date`,
+    `initial_term_length`, `renewal_notice_deadline`,
+    `co_tenancy_clause`, `percentage_rent_clause` — some of these
+    legitimately can't be grounded as absolute values, per the
+    conditional-commencement point above; others are real misses) and
+    (b) fields with long, genuinely-different-but-equally-valid
+    paraphrasing (`expense_structure`, `early_termination_right`,
+    `assignment_subletting_consent`, `renewal_option_terms`) that a
+    text/containment comparator fundamentally cannot judge as
+    semantically equivalent — that would need an LLM-as-judge comparator,
+    a real feature, not a bug fix. `early_termination_right`'s gold label
+    itself only exists because labeling it surfaced a genuine extraction
+    gap: an earlier live run's extracted value covered casualty/
+    condemnation termination rights but omitted Section 2.6's separate
+    Cancellation Right entirely.
+  - `evals/runner.test.ts` had to be restructured to measure its synthetic
+    test document's contribution as a **delta against a freshly-computed
+    baseline**, not an absolute total — now that real gold data exists in
+    the shared dev db, `runEval()` (which scores every document with gold
+    labels, by design) picks it up too, and the test's old exact-equality
+    assertions broke the moment real gold data existed alongside it.
+  - Full suite now 57 tests, all passing. `npm run build`, `npm run
+    lint`, `npx tsc --noEmit` all pass.
+- **3 more documents gold-labeled** (asked the user for scope rather than
+  assuming it; they chose "a few more, 3-4 total" — 4 documents now done):
+  `8x8-san-jose-onel-drive.json`, `circuit-research-labs-san-leandro-wicks.json`,
+  `heritage-bank-walnut-creek-ygnacio-plaza.json` (18 extraction-field
+  labels each, same close-reading standard as E-Loan — `pdftotext -layout`
+  plus targeted `grep` to locate every clause).
+  - **First document with genuinely fixed dates**: unlike the other three
+    (all conditional/relative commencement definitions), Heritage Bank's
+    Lease states `Commencement Date: August 16, 2007` directly as fact,
+    with a 7-year term confirmed by its own Basic Rent schedule table —
+    so this document got real `commencement`/`expiration` derived-date
+    gold labels (`2007-08-16` / `2014-08-15`), the first ones that exist.
+  - **Deliberately included a `next_escalation` gold label expected to
+    score as a miss**: Heritage Bank's escalation dates anchor to
+    September 1 each year (an artifact of the initial stub period), not
+    to the August 16 commencement anniversary `lib/dates/criticalDates.ts`
+    assumes — a real, already-documented limitation (Open Questions), not
+    a labeling error. Kept it in rather than leaving it out just because
+    it doesn't validate the current implementation.
+  - 8x8's lease references "Addendum No. 1" for its renewal/extension
+    terms, and Circuit Research Labs' renewal terms live in a separate
+    Lease Rider — neither addendum is included in this filed exhibit for
+    8x8 (confirmed: the PDF ends at signature blocks, 20 pages, matching
+    `SOURCES.md`), so `renewal_option_terms`/`renewal_notice_deadline`
+    are gold-labeled "not determinable from this document" for 8x8, a
+    real, correct ground truth rather than a gap.
+  - Ran the full pipeline (ingest → derive) against all three for real, so
+    the eval numbers reflect genuine multi-document signal, not one data
+    point. **Real result across all 4 labeled documents: 22/72 fields
+    (30.6%), 1/3 derived dates (33.3%)**, with a real trend visible
+    per-group: `parties_premises` 15/16 (94%) — names/addresses/square
+    footage are reliably extracted and grounded — versus `risk_clauses`
+    0/16 (0%), which mechanically confirms the architectural gap already
+    logged in Open Questions: risk-clause fields can only be gold-labeled
+    or extracted as positive claims, and this batch's documents mostly
+    have *absent* risk clauses (co-tenancy, percentage rent), which
+    `extract.ts` currently can't represent as a grounded "confirmed
+    absent" — this isn't new information, but it's now a measured number
+    instead of an inferred concern.
+  - Full suite still 57 tests (gold files aren't test-covered beyond
+    `seedGold.test.ts`'s existing idempotency check, which now covers 75
+    labels instead of 18). `npm run build`, `npm run lint`,
+    `npx tsc --noEmit` all pass.
 
 ## In Progress
 
-- None — the full pipeline is wired end to end, from ingest through the UI
-  and the eval harness. What's left is populating `fixtures/gold/` with
-  real hand-labeled data, and the doc-viewer's real PDF rendering.
+- None. 4 of up to 20 target documents are gold-labeled and fully
+  processed; everything else (pipeline, UI, eval mechanism) is wired end
+  to end.
 
 ## Next Up
 
-1. Hand-label gold data in `fixtures/gold/` and seed it into `gold_labels`
-   so `npm run eval` reports real accuracy instead of `totalFields: 0` —
-   the biggest remaining gap between "the harness works" and "the harness
-   proves something." Scope (how many of the 10 starter documents, let
-   alone the full 20-doc target) is still the open question it always was.
-2. Real `pdfjs-dist`-rendered PDF viewer with click-to-source highlighting,
+1. Real `pdfjs-dist`-rendered PDF viewer with click-to-source highlighting,
    replacing the placeholder text in the review workspace's doc-viewer
    pane — the one piece of the four screens still not wired to anything
    real.
-3. Run the full pipeline against the other 9 seeded documents (only
-   `eloan-metro-square-jacksonville` has been processed so far) — needed
-   before the documents list looks like a populated demo rather than
-   mostly `0%`/`—` rows.
+2. Run the full pipeline against the remaining 6 seeded-but-unprocessed
+   documents (4 of 10 are now processed) — needed before the documents
+   list looks like a populated demo rather than mostly `0%`/`—` rows.
+3. More gold-labeling, if there's time — 4 of up to 20 target documents
+   done. Each one so far has taken close reading of a full lease (~20-50
+   pages) across ~10-15 targeted clause lookups; that's the real
+   per-document cost to weigh against how much more eval signal is needed.
 
 ## Open Questions
 
@@ -414,7 +517,11 @@ Update this file after every meaningful implementation change.
   signal from project-overview.md still unbuilt.
 - How many gold-labeled documents are realistic to hand-label by Wednesday —
   20 is the target from project-overview.md, but this is the most likely
-  scope to trim if time runs short.
+  scope to trim if time runs short. 1 of 10 starter documents is now
+  labeled (`eloan-metro-square-jacksonville`, ~18 fields); it took close
+  reading of the full ~50-page lease across ~15 clause lookups to do
+  properly, which is the real data point for estimating the rest — not a
+  guess. Asked the user directly rather than assuming a number.
 - `lib/dates/criticalDates.ts` only computes `next_escalation` for a
   recognized annual cadence — CPI-indexed schedules and explicit step
   schedules (real formats seen in the fixtures) block instead of

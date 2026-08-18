@@ -41,14 +41,43 @@ describe("fieldsMatch", () => {
     });
 
     it("does not treat a long descriptive sentence containing a number as purely numeric", () => {
-      // Falls through to text comparison rather than matching on the first
-      // number it can find inside an otherwise-different sentence.
+      // Doesn't match on the first number it can find inside a sentence
+      // that also states a different amount ($240,000) — it only matches
+      // here because the shorter value's exact text is fully contained in
+      // the longer one (the containment fallback below), not because the
+      // numbers alone were compared.
+      expect(
+        fieldsMatch("$240,000.00 per annum ($20,000.00 per month)", "$20,000.00 per month"),
+      ).toBe(true);
+      // A genuinely different amount embedded in a longer sentence must not match.
+      expect(
+        fieldsMatch("$240,000.00 per annum ($20,000.00 per month)", "$25,000.00 per month"),
+      ).toBe(false);
+    });
+  });
+
+  describe("containment", () => {
+    it("matches when one value is the other plus extra elaboration", () => {
       expect(
         fieldsMatch(
-          "$240,000.00 per annum ($20,000.00 per month)",
-          "$20,000.00 per month",
+          "Southpark Corporate Center, L.L.C.",
+          "Southpark Corporate Center, L.L.C., a Delaware limited liability company",
         ),
-      ).toBe(false);
+      ).toBe(true);
+      expect(
+        fieldsMatch(
+          "annual Base Rent increases to 102.5% of the prior Lease Year's Base Rent.",
+          "annual Base Rent increases to 102.5% of the prior Lease Year's Base Rent (2.5% annual increase)",
+        ),
+      ).toBe(true);
+    });
+
+    it("does not let a short, generic value match by coincidental substring", () => {
+      expect(fieldsMatch("yes", "definitely not — the answer is no")).toBe(false);
+    });
+
+    it("matches a short but specific two-word value, not just long ones", () => {
+      expect(fieldsMatch("E-Loan, Inc.", "E-Loan, Inc., a Delaware corporation")).toBe(true);
     });
   });
 
