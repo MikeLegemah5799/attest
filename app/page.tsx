@@ -2,7 +2,7 @@ import { AlertTriangle, Upload } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { documents } from "./lib/documents";
+import { listDocumentSummaries } from "./lib/documents";
 
 function VerifiedDots({ filled, total, percent }: { filled: number; total: number; percent: number }) {
   return (
@@ -29,7 +29,9 @@ function FlagCount({ count }: { count: number }) {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const documents = await listDocumentSummaries();
+
   return (
     <div className="shell">
       <header className="topbar">
@@ -72,7 +74,7 @@ export default function Home() {
                 <TableRow key={doc.slug}>
                   <TableCell className="py-4 text-[13px]">
                     <Link href={`/documents/${doc.slug}`} className="row-link">
-                      {doc.name}
+                      {doc.title}
                     </Link>
                   </TableCell>
                   <TableCell className="py-4 text-[13px]">{doc.type}</TableCell>

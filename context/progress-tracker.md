@@ -307,21 +307,344 @@ Update this file after every meaningful implementation change.
   stage, ingest through surfacePrep, in one pass. Full suite now 43 tests,
   all passing. `npm run build`, `npm run lint`, `npx tsc --noEmit` all
   pass. All six pipeline stages now have real implementations.
+- UI rewired off real data. `app/lib/documents.ts` is now an async
+  `lib/db`/`surfacePrep`-backed module (`listDocumentSummaries`,
+  `getDocumentDetail`) instead of a static mock array; `app/documents/_lib/
+  review-data.ts` kept its view-shaping role but the mock consts became
+  pure transform functions (`toFieldSections`, `toTrackerCategories`,
+  `toQueueItems`, `toTimeline`, `toRiskFlagViews`) over real domain data —
+  matching the split code-standards.md already drew ("app/ owns final view
+  formatting, not derivation"). All four screens (documents list, review
+  workspace, review queue, critical dates & risk) now render real
+  persisted data, with real empty states (not crashes) for the 9 of 10
+  seeded documents that haven't been processed yet.
+  - Dropped `DocumentSummary.name` (redundant with `title`, real schema
+    only has one title field) and the `type` field is now a hardcoded
+    `"Office"` constant, not a DB column — project-overview.md scopes out
+    every other lease type, so a column for a constant isn't warranted.
+  - The critical-dates timeline is genuinely different from the mock: real
+    derived dates can be `blocked` (no valid position to plot), and more
+    than one can block at once, so blocked dates render as a stacked list
+    of reasoned callouts below the timeline instead of the mock's single
+    hardcoded positioned one. Added `.blocked-dates`/`.blocked-date-callout`
+    to `globals.css` for this (`.timeline-callout` stays absolute-positioned
+    for the real on-timeline case; reusing it for the stacked list would
+    have broken layout).
+  - The doc-viewer PDF pane is *not* wired to real `pdfjs-dist` rendering
+    or click-to-source highlighting in this pass — replaced the mock's
+    hardcoded fake paragraph (which would now contradict real field data
+    shown alongside it) with a short explanatory placeholder instead of
+    building real rendering, which is a separate, substantial client-side
+    feature. Logged as its own Next Up item, not silently dropped.
+  - Verified in a real browser session against the running dev server, not
+    just `npm run build`: the empty state for 9 unprocessed documents, then
+    ran the live pipeline for real against the seeded
+    `eloan-metro-square-jacksonville` document and confirmed all four
+    screens render its real fields/tracker counts/queue items/blocked
+    dates/risk flags correctly.
+  - **Found and fixed a real bug this session's own testing surfaced**:
+    `lib/db/seed.test.ts` deleted-and-recreated the 10 real fixture-slug
+    `documents` rows on every test run, which threw a foreign-key
+    constraint error the moment any of those documents had real
+    pipeline data attached (pages/extractions/derived_dates/risk_flags
+    reference `documents.id` with no cascade configured) — exactly what
+    happened once the E-Loan demo run above existed. Rewrote the test to
+    never delete those rows; it now asserts against whatever real state
+    already exists (idempotent re-seed, all 10 present, each filename
+    real) rather than resetting-then-testing. This also means `npm run
+    test` no longer wipes real seeded documents as a side effect —
+    previously it did, silently, each time (see: the `db:seed` re-runs
+    logged in earlier Completed entries working around exactly this).
+  - Refactored `DATE_TYPE_ORDER` out of `surfacePrep.ts` into a shared
+    `CRITICAL_DATE_TYPES` export on `lib/dates/criticalDates.ts` — evals
+    (below) needed the same four date-type strings, and hardcoding them a
+    third time risked drift.
+  - `npm run build`, `npm run lint` (zero warnings now — the evals stub
+    warnings are gone too, see below), `npx tsc --noEmit` all pass.
+- `evals/` harness implemented — `fieldsMatch` (type-aware comparator:
+  tolerant of date-format differences and currency/comma formatting on
+  values that are essentially just a number, exact-text fallback
+  otherwise — deliberately does *not* try to reconcile monthly-vs-annual
+  rent phrasing, since that's a real semantic difference, not a formatting
+  one) and `runEval` (scores every document with gold labels against its
+  latest run, field accuracy and derived-date accuracy as separate
+  scorecards per project-overview.md Goal 3, records an `eval_runs` row).
+  A gold label's `fieldKey` must resolve to one of the 18 extraction
+  fields or 4 derived date types or `runEval` throws — a labeling typo
+  fails loudly instead of silently shrinking the denominator and making
+  accuracy look better than it is. Tested with synthetic gold labels
+  (real db) covering both failure modes distinctly (field never
+  extracted vs. extracted-but-wrong), field-group breakdown, the
+  separate date-type scoring path, and the unrecognized-fieldKey throw.
+  Ran `npm run eval` for real against the dev db: completes cleanly and
+  reports honestly — `totalFields: 0` — since `fixtures/gold/` has no
+  labeled documents yet (Open Questions already flags this as the
+  likely-to-trim scope item). Full suite now 53 tests, all passing;
+  `npm run lint` has zero warnings for the first time this session — the
+  evals stub's unused-param warnings are gone along with the stub.
+- First real gold-labeled document landed:
+  `fixtures/gold/eloan-metro-square-jacksonville.json` (18 extraction-field
+  labels, hand-read against the actual lease text — `pdftotext -layout`
+  plus targeted `grep` to locate each clause, not skimmed) plus
+  `lib/db/seedGold.ts` (`npm run db:seed-gold`) to sync `fixtures/gold/*.json`
+  into `gold_labels`, idempotent like `db:seed`.
+  - **Deliberately no derived-date gold labels for this document** —
+    E-Loan's Commencement Date is defined conditionally (earlier of
+    possession or substantial-completion delivery, Section 2.1), not as a
+    fixed calendar date, so there's no absolute date to check a computed
+    value against. A real, correct fact about this lease, not a labeling
+    gap.
+  - **Caught a real, source-confirmed typo while labeling**: the renewal
+    notice period reads "six (61 months" in the lease's own text layer —
+    confirmed identical via both `pdftotext` and this project's own
+    `lib/pdf` (pdf.js) extraction, so it's in the source PDF itself, not a
+    tool artifact. Labeled as 6 months (the spelled-out word is
+    unambiguous) with a note explaining the discrepancy.
+  - **Running `npm run eval` against this label set caught two real
+    comparator bugs**, found by actually inspecting a real accuracy
+    number (16.7%) rather than trusting the mechanism because it ran
+    without error:
+    1. `fieldsMatch`'s text fallback required exact equality, so
+       `"Southpark Corporate Center, L.L.C."` (gold) vs `"...L.L.C., a
+       Delaware limited liability company"` (extracted, same fact plus
+       elaboration) scored as wrong. Added a containment fallback (one
+       normalized value fully contained in the other) after exact-match
+       and before giving up.
+    2. The containment fallback's own guard was a 12-character minimum,
+       which rejected `"E-Loan, Inc."` (11 characters, but obviously
+       specific, not generic) as a match for `"E-Loan, Inc., a Delaware
+       corporation"`. Replaced the character-count guard with a
+       **2-word-minimum** guard — the actual property that distinguishes
+       "specific enough to trust as a real match" from "generic enough to
+       risk a coincidental substring," which character count doesn't
+       capture.
+  - Real accuracy after both fixes: **6/18 (33%)** on this document/run.
+    The remaining misses split into two honest categories, not a single
+    "accuracy is low" verdict: (a) fields the model genuinely didn't
+    extract this run (`commencement_date`, `expiration_date`,
+    `initial_term_length`, `renewal_notice_deadline`,
+    `co_tenancy_clause`, `percentage_rent_clause` — some of these
+    legitimately can't be grounded as absolute values, per the
+    conditional-commencement point above; others are real misses) and
+    (b) fields with long, genuinely-different-but-equally-valid
+    paraphrasing (`expense_structure`, `early_termination_right`,
+    `assignment_subletting_consent`, `renewal_option_terms`) that a
+    text/containment comparator fundamentally cannot judge as
+    semantically equivalent — that would need an LLM-as-judge comparator,
+    a real feature, not a bug fix. `early_termination_right`'s gold label
+    itself only exists because labeling it surfaced a genuine extraction
+    gap: an earlier live run's extracted value covered casualty/
+    condemnation termination rights but omitted Section 2.6's separate
+    Cancellation Right entirely.
+  - `evals/runner.test.ts` had to be restructured to measure its synthetic
+    test document's contribution as a **delta against a freshly-computed
+    baseline**, not an absolute total — now that real gold data exists in
+    the shared dev db, `runEval()` (which scores every document with gold
+    labels, by design) picks it up too, and the test's old exact-equality
+    assertions broke the moment real gold data existed alongside it.
+  - Full suite now 57 tests, all passing. `npm run build`, `npm run
+    lint`, `npx tsc --noEmit` all pass.
+- **3 more documents gold-labeled** (asked the user for scope rather than
+  assuming it; they chose "a few more, 3-4 total" — 4 documents now done):
+  `8x8-san-jose-onel-drive.json`, `circuit-research-labs-san-leandro-wicks.json`,
+  `heritage-bank-walnut-creek-ygnacio-plaza.json` (18 extraction-field
+  labels each, same close-reading standard as E-Loan — `pdftotext -layout`
+  plus targeted `grep` to locate every clause).
+  - **First document with genuinely fixed dates**: unlike the other three
+    (all conditional/relative commencement definitions), Heritage Bank's
+    Lease states `Commencement Date: August 16, 2007` directly as fact,
+    with a 7-year term confirmed by its own Basic Rent schedule table —
+    so this document got real `commencement`/`expiration` derived-date
+    gold labels (`2007-08-16` / `2014-08-15`), the first ones that exist.
+  - **Deliberately included a `next_escalation` gold label expected to
+    score as a miss**: Heritage Bank's escalation dates anchor to
+    September 1 each year (an artifact of the initial stub period), not
+    to the August 16 commencement anniversary `lib/dates/criticalDates.ts`
+    assumes — a real, already-documented limitation (Open Questions), not
+    a labeling error. Kept it in rather than leaving it out just because
+    it doesn't validate the current implementation.
+  - 8x8's lease references "Addendum No. 1" for its renewal/extension
+    terms, and Circuit Research Labs' renewal terms live in a separate
+    Lease Rider — neither addendum is included in this filed exhibit for
+    8x8 (confirmed: the PDF ends at signature blocks, 20 pages, matching
+    `SOURCES.md`), so `renewal_option_terms`/`renewal_notice_deadline`
+    are gold-labeled "not determinable from this document" for 8x8, a
+    real, correct ground truth rather than a gap.
+  - Ran the full pipeline (ingest → derive) against all three for real, so
+    the eval numbers reflect genuine multi-document signal, not one data
+    point. **Real result across all 4 labeled documents: 22/72 fields
+    (30.6%), 1/3 derived dates (33.3%)**, with a real trend visible
+    per-group: `parties_premises` 15/16 (94%) — names/addresses/square
+    footage are reliably extracted and grounded — versus `risk_clauses`
+    0/16 (0%), which mechanically confirms the architectural gap already
+    logged in Open Questions: risk-clause fields can only be gold-labeled
+    or extracted as positive claims, and this batch's documents mostly
+    have *absent* risk clauses (co-tenancy, percentage rent), which
+    `extract.ts` currently can't represent as a grounded "confirmed
+    absent" — this isn't new information, but it's now a measured number
+    instead of an inferred concern.
+  - Full suite still 57 tests (gold files aren't test-covered beyond
+    `seedGold.test.ts`'s existing idempotency check, which now covers 75
+    labels instead of 18). `npm run build`, `npm run lint`,
+    `npx tsc --noEmit` all pass.
+
+- Real client-side PDF viewer with click-to-source highlighting landed,
+  replacing the doc-viewer placeholder text — the last of the four screens
+  now runs on something real end to end.
+  - **`lib/pipeline/runDocument.ts`** (new) — a thin orchestrator (ingest →
+    extract → verify → persist → derive, one call per stage, no logic of
+    its own) plus a `tsx`-runnable CLI (`npm run pipeline:run -- <slug...>`)
+    for driving the pipeline against seeded documents from the command
+    line, the same sequence each stage's own live end-to-end check already
+    used by hand. Skips ingest once a document is past `pending` (ingest's
+    `pages` insert is unique on `(documentId, pageNumber)`, not safe to
+    re-run) so a retry after a later-stage failure doesn't need manual
+    cleanup first.
+  - **`app/api/documents/[slug]/pdf/route.ts`** (new) — the project's first
+    route handler; streams a seeded lease's PDF bytes from
+    `fixtures/leases/` by slug for the client viewer to fetch. No logic
+    beyond the filename lookup (code-standards.md: source PDFs live on the
+    filesystem, not as DB blobs).
+  - **`components/attest/CitationHighlight.tsx`** (new) — the PDF-viewer
+    overlay component ui-context.md names explicitly, alongside
+    `ConfidenceBadge`. Purely presentational: given a pixel rect, renders
+    the highlighted-span box; owns no PDF-coordinate math itself.
+  - **`app/documents/[slug]/_components/PdfViewer.tsx`** (new, client) —
+    renders the current page to a `<canvas>` via `pdfjs-dist`'s *browser*
+    build (`import "pdfjs-dist"`), a different module surface than
+    `lib/pdf/`'s Node ("legacy") build used server-side — no canvas/worker
+    APIs exist in the legacy build, so this talks to pdfjs-dist directly
+    rather than through that wrapper, fully typed via the package's own
+    shipped `.d.ts` (no `any`). Worker script is resolved via the
+    bundler-recognized `new URL("pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url)` pattern rather than a manual `public/` copy.
+    `BoundingBox`es (PDF points at scale 1, per `lib/types.ts`) are
+    converted to on-screen pixels by multiplying by the page's current
+    render scale, computed from the container's actual width so the page
+    always fits the pane.
+  - **`app/documents/[slug]/_components/ReviewWorkspace.tsx`** (new,
+    client) — owns the one piece of state that has to live above both
+    panes (which field is selected, which page the viewer shows), per
+    code-standards.md's "Only the PDF viewer, field-click highlighting...
+    need 'use client'"; `page.tsx` stays a server component for the actual
+    data fetch and just passes shaped data down. Clicking a field card
+    navigates the viewer to that field's cited page and highlights its
+    evidence span, exactly as ui-context.md's Layout Patterns describes;
+    the pager's prev/next buttons (previously inert) now actually change
+    pages. A field with no `boundingBox` (ungrounded/blocked) still
+    navigates to its cited page, just with no highlight drawn — no crash.
+  - `app/documents/_lib/review-data.ts`'s `Field` type gained `pageNumber`/
+    `boundingBox` (previously collapsed into a display-only citation
+    string) so the click handler has real coordinates to act on;
+    `app/lib/documents.ts`'s `getDocumentDetail` now also returns
+    `pageCount` for the pager's "page X / N" display.
+  - Verified against a real running dev server via a scripted Playwright
+    session (no `chromium-cli` available in this environment; adapted the
+    `run` skill's Electron-pattern fallback) against the real, fully
+    processed `eloan-metro-square-jacksonville` document: real PDF text
+    renders on canvas (not the old skeleton placeholder), the pager
+    shows real page counts and prev/next both work, clicking a field on a
+    different page (e.g. Base Rent, p.8) navigates the viewer there and
+    draws a highlight box over exactly the cited evidence text, and
+    clicking a `blocked` field (null `boundingBox`) navigates without
+    drawing a stray highlight or erroring. Zero browser console errors
+    across all of this, including pdfjs-dist worker loading — the one real
+    risk point flagged going in. `npm run build` produces one Turbopack
+    warning ("Package pdfjs-dist can't be external... require() resolves
+    to a EcmaScript module") from `serverExternalPackages: ["pdfjs-dist"]`
+    (needed for `lib/pdf/`'s server-side Node build) colliding with the
+    client viewer's worker asset resolution during the RSC client-boundary
+    compile pass; harmless in practice (confirmed via the real-browser
+    check above — the asset still bundles and the worker still loads) but
+    left as a known, understood cosmetic build warning rather than chasing
+    a fix with uncertain payoff. `npm run lint`, `npx tsc --noEmit`, and
+    the full 57-test suite all still pass.
+- All 10 seeded documents now fully processed end to end (ingest → derive)
+  via `lib/pipeline/runDocument.ts` — the documents list is a real
+  populated demo now, not mostly `0%`/`—` rows.
+  - **A real incident during this session, worth recording plainly**: while
+    clearing a leftover local dev-server process, `attest.db-shm`/
+    `attest.db-wal` were deleted while the actual running dev server still
+    held an open `better-sqlite3` WAL-mode connection — this discarded
+    that connection's not-yet-checkpointed writes, silently reverting 3 of
+    the 6 just-processed documents back to `pending` and leaving a 4th
+    stuck mid-pipeline (extracted but not verified/persisted/derived).
+    `PRAGMA integrity_check` confirmed the database itself stayed
+    structurally sound (nothing corrupted, just lost writes); the fix was
+    just re-running `runDocument` for the 4 affected slugs — safe to do
+    because ingest's status-gate (`pending`-only) meant it correctly
+    skipped re-ingesting the one document whose `pages` rows had survived,
+    and extract/verify/persist/derive are all safe to re-run regardless
+    (immutable, new-`runId`-per-run by design). Lesson: never touch a
+    SQLite WAL/SHM file directly while any process might hold the
+    connection open — there was no reason to touch them at all here.
+  - This run also hit the Anthropic account's credit balance running out
+    mid-batch (a real `400 invalid_request_error`, not a bug) — paused and
+    surfaced it to the user directly rather than guessing at a workaround;
+    resumed automatically via a background retry loop once credits were
+    topped up.
+- **3 more documents gold-labeled** (7 of up to 20 target documents now
+  done): `tekelec-morrisville-paramount-parkway.json`,
+  `radiant-systems-centreport-fort-worth.json`,
+  `avi-biopharma-north-creek-bothell.json` — same close-reading standard as
+  the first four (`pdftotext -layout` plus targeted `grep` per clause).
+  - **Two genuinely new derived-date situations, distinct from the first
+    four documents' patterns**: Tekelec has a directly-stated Commencement
+    Date but *no* verbatim Expiration Date anywhere in the text (only
+    computable from Commencement + the stated 9-year Term) — gold-labeled
+    with the computed value but flagged as an expected miss for both the
+    `expiration_date` field and the `expiration` derived date, since
+    grounding (invariant 1) can't support a value with no quotable source,
+    even though it's the objectively correct value. Confirmed by a real
+    pipeline run: `commencement` computed correctly (2009-08-01),
+    `expiration` correctly blocked, exactly as predicted. Tekelec's
+    escalation is also CPI-indexed (not a fixed percentage) — the first
+    fixture to test `next_escalation`'s "annual" cadence-recognition
+    against a *variable-amount* but still annually-timed escalation;
+    predicted and confirmed it computes correctly (2010-08-01), since
+    `deriveNextEscalationDate` only needs the word "annual" in the
+    extracted text and never has to interpret the CPI amount itself — a
+    useful positive contrast to heritage-bank's `next_escalation` miss.
+  - avi-biopharma has both Commencement *and* Expiration stated as fixed
+    calendar dates directly in its Basic Lease Information table (the
+    first document where neither needs computing) — real `commencement`/
+    `expiration` gold labels, both confirmed correct in a real run.
+  - radiant-systems keeps E-Loan's conditional-commencement pattern (no
+    fixed calendar date derivable at all), so — like E-Loan — deliberately
+    gets no commencement/expiration/next_escalation derived-date labels.
+  - No co-tenancy or percentage-rent clauses in any of the 3 (confirmed by
+    full-text search each time, not assumed) — continues the pattern
+    already measured across the first four documents.
+  - Ran `npm run db:seed-gold` and `npm run eval` after each document
+    landed, not just at the end — `totalFields`/`totalDates` grew exactly
+    as expected each time (108 → 126 fields, 6 → 8 dates) with no
+    `unrecognized fieldKey` throws, confirming each file's `fieldKey`s
+    were valid before moving to the next document. Current real numbers
+    across all 7 labeled documents: **36/126 fields (28.6%), 5/8 derived
+    dates (62.5%)**.
+  - Full suite still 57 tests (gold files aren't test-covered beyond
+    `seedGold.test.ts`'s idempotency check, which now covers 115 labels
+    instead of 75). `npm run build`, `npm run lint`, `npx tsc --noEmit`
+    all pass.
 
 ## In Progress
 
-- None — UI shell is paused pending the backend pipeline; the skeleton is
-  in place but no stage has real logic yet, even though every backend
-  stage behind it is now real. Next session should rewire the screens.
+- None. 7 of up to 20 target documents are gold-labeled; all 10 seeded
+  documents are fully processed; PDF viewer, pipeline, UI, and eval
+  mechanism are all wired end to end on real data.
 
 ## Next Up
 
-1. Rewire the four existing screens from mock arrays
-   (`app/lib/documents.ts`, `app/documents/_lib/review-data.ts`) to real
-   `lib/db` queries via `surfacePrep`, and replace the doc-viewer skeleton
-   with a real `pdfjs-dist`-rendered PDF plus click-to-source highlighting.
-2. Only once the pipeline is stable end to end: `evals/` harness against the
-   gold set.
+1. More gold-labeling, if there's time — 7 of up to 20 target documents
+   done (3 remain from the 10-document starter set: `8x8-sunnyvale-maude-
+   ave`, `fhlb-seattle-century-square`,
+   `entropic-communications-sorrento-san-diego`). Each document has taken
+   close reading of a full lease (~20-90 pages) across ~10-15 targeted
+   clause lookups; that's the real per-document cost to weigh against how
+   much more eval signal is needed before Friday's submission.
+2. Self-consistency scoring (see Open Questions) is still the one
+   trust-layer signal from project-overview.md not yet built, if there's
+   time after gold-labeling.
 
 ## Open Questions
 
@@ -332,7 +655,11 @@ Update this file after every meaningful implementation change.
   signal from project-overview.md still unbuilt.
 - How many gold-labeled documents are realistic to hand-label by Wednesday —
   20 is the target from project-overview.md, but this is the most likely
-  scope to trim if time runs short.
+  scope to trim if time runs short. 1 of 10 starter documents is now
+  labeled (`eloan-metro-square-jacksonville`, ~18 fields); it took close
+  reading of the full ~50-page lease across ~15 clause lookups to do
+  properly, which is the real data point for estimating the rest — not a
+  guess. Asked the user directly rather than assuming a number.
 - `lib/dates/criticalDates.ts` only computes `next_escalation` for a
   recognized annual cadence — CPI-indexed schedules and explicit step
   schedules (real formats seen in the fixtures) block instead of

@@ -1,0 +1,95 @@
+{
+  "slug": "circuit-research-labs-san-leandro-wicks",
+  "labels": [
+    {
+      "fieldKey": "landlord_name",
+      "expectedValue": "Wicks Partners",
+      "notes": "p.1, Section 1.01 Defined Terms — the collective name for the group of trusts/individuals holding title as tenants-in-common (Jon Q. Reynolds, David A. Brown, Cecilyn Breen, Mary Putnam Dee, The Reynolds Family Partners, Judith B. Brown, and Donald B. Putnam, each as trustee/individual, \"collectively, Landlord\")."
+    },
+    {
+      "fieldKey": "tenant_name",
+      "expectedValue": "Orban, CRL Systems, Inc.",
+      "notes": "p.1, Section 1.01 — an Arizona corporation"
+    },
+    {
+      "fieldKey": "premises_address",
+      "expectedValue": "14798 Wicks Blvd, San Leandro, CA 94577 (Alameda County)",
+      "notes": "p.1, Section 1.01"
+    },
+    {
+      "fieldKey": "rentable_square_feet",
+      "expectedValue": "7,782",
+      "notes": "p.1, Section 1.01 — Rentable Square Feet of the Premises (distinct from the Building's 18,264 sq ft total)"
+    },
+    {
+      "fieldKey": "commencement_date",
+      "expectedValue": "The earlier of (a) if Landlord must construct Leasehold Improvements per Exhibit E: the date the Premises are Ready for Occupancy, or the date they would have been Ready for Occupancy absent Tenant Delays; or (b) if no Exhibit E is attached: the date Landlord delivers possession. A \"Scheduled Commencement Date\" of November 15, 2006 is stated as a target, but Section 3.01 governs the actual date, which isn't fixed in the Lease text.",
+      "notes": "p.1 (Scheduled Commencement Date) and p.3, Section 3.01 (governing definition). Not a fixed date — derived-date types are deliberately not gold-labeled for this document, same reasoning as eloan-metro-square-jacksonville and 8x8-san-jose-onel-drive."
+    },
+    {
+      "fieldKey": "expiration_date",
+      "expectedValue": "63 months after the Commencement Date, extended if needed so the Term ends on the last calendar day of a month. Not a fixed calendar date, since the Commencement Date itself is conditional.",
+      "notes": "p.1 (Term: 63 months) and p.3, Section 3.02"
+    },
+    {
+      "fieldKey": "initial_term_length",
+      "expectedValue": "Sixty-three (63) months",
+      "notes": "p.1, Section 1.01"
+    },
+    {
+      "fieldKey": "base_rent",
+      "expectedValue": "$9,183.00 per month ($110,196.00 per annum)",
+      "notes": "p.1, Section 1.01. Subject to an initial 3-month abatement and a step-schedule increase thereafter — see escalation_schedule."
+    },
+    {
+      "fieldKey": "escalation_type",
+      "expectedValue": "Fixed step-schedule escalation (not a flat percentage) — Monthly Base Rent increases to specific stated dollar amounts at defined month ranges over the Term.",
+      "notes": "p.1, Section 1.01, \"Adjustment Dates for Rent Escalations\" table"
+    },
+    {
+      "fieldKey": "escalation_schedule",
+      "expectedValue": "Months 1-3: $0.00 (abated); months 4-15: $9,183.00; months 16-27: $9,458.00; months 28-39: $9,742.00; months 40-51: $10,034.00; months 52-63: $10,335.00.",
+      "notes": "p.1, Section 1.01 table"
+    },
+    {
+      "fieldKey": "renewal_option_terms",
+      "expectedValue": "One (1) option to extend the Term for one additional 5-year period, on the same terms except Monthly Base Rent resets to Fair Market Value as of the Extension's start (never less than the last month's pre-Extension rent). Conditioned on no uncured Event of Default and no more than 3 late-rent instances of 10+ days during the Term. The option is personal to Orban, CRL Systems, Inc. and voids if Tenant assigns or sublets before exercising it (or before the Extension begins, if exercised).",
+      "notes": "Lease Rider Section 17, \"Option to Extend Term\""
+    },
+    {
+      "fieldKey": "renewal_notice_deadline",
+      "expectedValue": "At least 180 days, but not more than 270 days, before expiration of the Term",
+      "notes": "Lease Rider Section 17(a)(i)"
+    },
+    {
+      "fieldKey": "expense_structure",
+      "expectedValue": "Base-year expense stop — Tenant pays its pro rata share (42.61%) of Operating Expenses, Real Estate Taxes, and Insurance Expenses only to the extent each category exceeds its respective 2007-calendar-year base amount (Operating Expense Base, Tax Base, Insurance Base).",
+      "notes": "p.1-2, Section 1.01 (bases and share %) and p.4-5, Sections 4.03/5.01/6.01"
+    },
+    {
+      "fieldKey": "security_deposit",
+      "expectedValue": "$15,000.00",
+      "notes": "p.1, Section 1.01 (later reduced by $4,665.00 to $10,335.00 per a rider provision after certain conditions were met)"
+    },
+    {
+      "fieldKey": "early_termination_right",
+      "expectedValue": "Yes, in three circumstances: (1) Casualty — if Landlord determines the Building can't reasonably be repaired within 180 days of damage/destruction, either party may terminate (Section 11.03); Landlord may also terminate for an uninsured casualty (Section 11.04). (2) Condemnation — the Lease terminates automatically on a full taking (Section 12.01); either party has rights on a partial taking that renders the Premises unusable (Section 12.02). (3) Landlord's Right to Cancel — in connection with any proposed assignment or full-Premises sublease, Landlord may instead elect to cancel and terminate the Lease (or the relevant portion, for a partial sublease) by notice within 30 days of Tenant's request (Section 14.02).",
+      "notes": "p.10-11 (Sections 11, 12) and p.16-17 (Section 14.02)"
+    },
+    {
+      "fieldKey": "co_tenancy_clause",
+      "expectedValue": "Not present — the Lease contains no co-tenancy clause.",
+      "notes": "Confirmed by full-text search of the lease body"
+    },
+    {
+      "fieldKey": "assignment_subletting_consent",
+      "expectedValue": "Yes — Landlord's prior written consent is required for any assignment, sublease, or transfer of 50%+ beneficial ownership in Tenant (not unreasonably withheld, conditioned, or delayed), with adequate-assurance-of-performance conditions. Exempt without consent (notice only): transfers to a parent, subsidiary, or commonly-controlled affiliate, or to a purchaser of substantially all of Tenant's stock/assets/operations (a \"Permitted Transfer\").",
+      "notes": "p.16, Section 14.01"
+    },
+    {
+      "fieldKey": "percentage_rent_clause",
+      "expectedValue": "Not present — no percentage-of-sales rent component; rent is fixed Base Rent (per the step schedule) plus Additional Rent (base-year expense-stop pass-throughs) only.",
+      "notes": "Confirmed by full-text search of the lease body"
+    }
+  ]
+}

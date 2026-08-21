@@ -3,54 +3,68 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ConfidenceBadge } from "@/components/attest/ConfidenceBadge";
-import { documents } from "../../../lib/documents";
+import { getDocumentDetail } from "../../../lib/documents";
 import { ReviewTopbar, ReviewTabbar } from "../../_components/ReviewHeader";
-import { criticalDates, timelineYears, renewalNoticeCallout, riskFlags, queueItems } from "../../_lib/review-data";
+import { toRiskFlagViews, toTimeline } from "../../_lib/review-data";
 
 export default async function CriticalDatesAndRisk(props: PageProps<"/documents/[slug]/risk">) {
   const { slug } = await props.params;
-  const doc = documents.find((d) => d.slug === slug);
-  if (!doc) notFound();
+  const detail = await getDocumentDetail(slug);
+  if (!detail) notFound();
+
+  const timeline = toTimeline(detail.result.criticalDates);
+  const riskFlags = toRiskFlagViews(detail.result.riskFlags);
 
   return (
     <div className="shell">
-      <ReviewTopbar doc={doc} />
-      <ReviewTabbar slug={slug} active="risk" queueCount={queueItems.length} />
+      <ReviewTopbar doc={detail.summary} />
+      <ReviewTabbar slug={slug} active="risk" queueCount={detail.result.queueItems.length} />
 
       <main className="content">
         <div className="panel-card">
           <div className="section-title">Critical Dates</div>
-          <div className="timeline">
-            <div className="timeline-years">
-              {timelineYears.map((year) => (
-                <span key={year}>{year}</span>
-              ))}
-            </div>
-            <div className="timeline-track">
-              {criticalDates.map((date) => {
-                const align = date.position <= 5 ? "start" : date.position >= 95 ? "end" : "center";
-                return (
-                  <div
-                    key={date.label}
-                    className={`timeline-marker timeline-marker--${align}`}
-                    style={{ left: `${date.position}%` }}
-                  >
-                    <span className="timeline-dot" />
-                    <div className="timeline-marker-label">
-                      <strong>{date.date}</strong>
-                      <span>{date.label}</span>
+          {timeline.markers.length === 0 ? (
+            <p className="muted">No critical dates computed yet for this document.</p>
+          ) : (
+            <div className="timeline">
+              <div className="timeline-years">
+                {timeline.years.map((year) => (
+                  <span key={year}>{year}</span>
+                ))}
+              </div>
+              <div className="timeline-track">
+                {timeline.markers.map((date) => {
+                  const align = date.position <= 5 ? "start" : date.position >= 95 ? "end" : "center";
+                  return (
+                    <div
+                      key={date.label}
+                      className={`timeline-marker timeline-marker--${align}`}
+                      style={{ left: `${date.position}%` }}
+                    >
+                      <span className="timeline-dot" />
+                      <div className="timeline-marker-label">
+                        <strong>{date.date}</strong>
+                        <span>{date.label}</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              <div className="timeline-callout" style={{ left: `${renewalNoticeCallout.position}%` }}>
-                <div className="timeline-callout-title">
-                  <FileX className="size-3.5" /> {renewalNoticeCallout.title}
-                </div>
-                <div className="timeline-callout-body">{renewalNoticeCallout.body}</div>
+                  );
+                })}
               </div>
             </div>
-          </div>
+          )}
+
+          {timeline.blocked.length > 0 && (
+            <div className="blocked-dates">
+              {timeline.blocked.map((date) => (
+                <div className="blocked-date-callout" key={date.label}>
+                  <div className="timeline-callout-title">
+                    <FileX className="size-3.5" /> {date.label}
+                  </div>
+                  <div className="timeline-callout-body">Blocked — {date.reason}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="panel-card">

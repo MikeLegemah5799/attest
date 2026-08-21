@@ -9,9 +9,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "eval": "tsx evals/runner.ts",
+    "pipeline:run": "tsx lib/pipeline/runDocument.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx lib/db/seed.ts"
+    "db:seed": "tsx lib/db/seed.ts",
+    "db:seed-gold": "tsx lib/db/seedGold.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

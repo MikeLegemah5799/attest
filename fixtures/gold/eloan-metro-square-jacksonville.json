@@ -1,0 +1,95 @@
+{
+  "slug": "eloan-metro-square-jacksonville",
+  "labels": [
+    {
+      "fieldKey": "landlord_name",
+      "expectedValue": "Southpark Corporate Center, L.L.C.",
+      "notes": "p.3, recital paragraph"
+    },
+    {
+      "fieldKey": "tenant_name",
+      "expectedValue": "E-Loan, Inc.",
+      "notes": "p.3, recital paragraph"
+    },
+    {
+      "fieldKey": "premises_address",
+      "expectedValue": "Building \"E\", Metro Square, 3563 Philips Highway, Jacksonville, Florida 32207",
+      "notes": "p.3, Section 1.1 Description of Premises"
+    },
+    {
+      "fieldKey": "rentable_square_feet",
+      "expectedValue": "24,000",
+      "notes": "p.3, Section 1.2 Floor Area of the Premises"
+    },
+    {
+      "fieldKey": "commencement_date",
+      "expectedValue": "The earlier of (i) the date Tenant takes possession and occupies the Premises for normal business operations, or (ii) the first business day following Landlord's delivery of the Premises with Tenant Improvements substantially complete. No fixed calendar date is stated in the Lease itself.",
+      "notes": "p.5, Section 2.1. Not a fixed date — commencement_date/expiration_date/renewal_notice_deadline/next_escalation derived-date types are deliberately not gold-labeled for this document, since there's no absolute date to check a computed value against."
+    },
+    {
+      "fieldKey": "expiration_date",
+      "expectedValue": "The last day of the final full calendar month of the 63-month Term following the Commencement Date. No fixed calendar date is stated in the Lease itself.",
+      "notes": "p.5, Section 2.1 — same conditional-commencement caveat as commencement_date"
+    },
+    {
+      "fieldKey": "initial_term_length",
+      "expectedValue": "Sixty-three (63) full calendar months",
+      "notes": "p.5, Section 2.1"
+    },
+    {
+      "fieldKey": "base_rent",
+      "expectedValue": "$240,000.00 per annum ($20,000.00 per month)",
+      "notes": "p.6, Section 3.1. Subject to a temporary abatement schedule for the first several months (partial free rent, then a reduced rate) before reaching this stated rate — see Section 3.1 for the abatement detail; this is the field's headline contractual rate, not the abated near-term cashflow."
+    },
+    {
+      "fieldKey": "escalation_type",
+      "expectedValue": "Fixed percentage annual escalation — 2.5% per Lease Year",
+      "notes": "p.6, Section 3.1.b"
+    },
+    {
+      "fieldKey": "escalation_schedule",
+      "expectedValue": "Beginning with the second Lease Year and each Lease Year thereafter, annual Base Rent increases to 102.5% of the prior Lease Year's Base Rent.",
+      "notes": "p.6, Section 3.1.b"
+    },
+    {
+      "fieldKey": "renewal_option_terms",
+      "expectedValue": "Three successive Renewal Terms of thirty-six (36) months each, on the same terms as the original Term (including the continued 2.5% annual Base Rent escalation), plus a refurbishment allowance of $3.00/sq ft of net rentable floor area for the first Renewal Term, increasing 5% for each successive Renewal Term.",
+      "notes": "p.7-8, Section 2.5"
+    },
+    {
+      "fieldKey": "renewal_notice_deadline",
+      "expectedValue": "Six (6) months prior to expiration of the Term or the then-current Renewal Term",
+      "notes": "p.7, Section 2.5(i). The source PDF's text layer reads \"six (61 months\" — a typo/OCR-artifact in the underlying document (confirmed identical in both pdftotext and this project's own pdf.js-based extraction, so it's in the source PDF itself, not a tool artifact). \"Six\" is spelled out unambiguously; the gold value corrects the garbled parenthetical numeral."
+    },
+    {
+      "fieldKey": "expense_structure",
+      "expectedValue": "Net lease — Tenant pays Additional Rent equal to its pro rata share (initially 6.46%) of Operating Expenses and Real Estate Taxes, estimated at $2.25/sq ft of net rentable floor area for the calendar year of the Commencement Date, trued up annually against Landlord's actual expenses.",
+      "notes": "p.8-9, Section 3.3"
+    },
+    {
+      "fieldKey": "security_deposit",
+      "expectedValue": "$21,300.00 cash security deposit, plus a letter of credit (initially $500,000.00, stepping down to $410,000.00, $320,000.00, and $160,000.00 in later Lease Years)",
+      "notes": "p.10-11, Section 3.6"
+    },
+    {
+      "fieldKey": "early_termination_right",
+      "expectedValue": "Yes, in three distinct circumstances: (1) Tenant may cancel the Lease as of the 3rd anniversary of the Commencement Date, with written notice at least 180 days before that anniversary and payment of a cancellation fee equal to Landlord's unamortized lease-execution and tenant-improvement costs (Section 2.6, the \"Cancellation Right\"). (2) Either party may terminate on casualty damage under specified conditions (extensive damage, insufficient proceeds, or late-term casualty). (3) The Lease terminates automatically on a full condemnation taking, and either party may terminate on a partial taking that materially interferes with Tenant's operations.",
+      "notes": "p.7 (Section 2.6, Cancellation Right) plus the casualty and condemnation articles later in the Lease. Section 2.6's Cancellation Right is a distinct, separately-notice-gated termination right that's easy to miss if only the casualty/condemnation articles are reviewed."
+    },
+    {
+      "fieldKey": "co_tenancy_clause",
+      "expectedValue": "Not present — the Lease contains no co-tenancy clause.",
+      "notes": "Confirmed by full-text search of the lease body — no occurrence of \"co-tenancy\" or equivalent language."
+    },
+    {
+      "fieldKey": "assignment_subletting_consent",
+      "expectedValue": "Yes — Landlord's advance written consent is required for any assignment, transfer, encumbrance, or sublease (not to be unreasonably withheld or delayed), except that Tenant may assign or sublease to an affiliate (an entity controlling, controlled by, or under common control with Tenant, or a successor by merger/asset acquisition) without consent.",
+      "notes": "p.15-16, Section 5.2"
+    },
+    {
+      "fieldKey": "percentage_rent_clause",
+      "expectedValue": "Not present — rent is fixed Base Rent plus Additional Rent (expense pass-throughs) only; no percentage-of-sales rent component.",
+      "notes": "Confirmed by full-text search of the lease body — no occurrence of \"percentage rent\" or equivalent language."
+    }
+  ]
+}

@@ -6,8 +6,6 @@ trusting it, and derives critical dates and risk flags from that
 verified data — with a citation trail from any field back to the exact
 page and passage it came from.
  
-Built for the Newmark Staff Software Engineer take-home.
- 
 ## Why this problem
  
 A May 2026 industry survey (First American Data & Analytics / DealGround)

@@ -1,6 +1,7 @@
 import { listLatestDerivedDates } from "@/lib/db/queries/derivedDates";
 import { listLatestExtractions } from "@/lib/db/queries/extractions";
 import { listLatestRiskFlags } from "@/lib/db/queries/riskFlags";
+import { CRITICAL_DATE_TYPES } from "@/lib/dates/criticalDates";
 import type { DerivedDate, ExtractionField, FieldGroup, RiskFlag } from "@/lib/types";
 
 import { FIELD_GROUPS, FIELD_SPECS, fieldSpecsForGroup } from "./fields";
@@ -21,10 +22,10 @@ export type SurfacePrepResult = {
 // UI-facing display order — timeline/chronological for dates, spec
 // declaration order for risk flags. Neither is guaranteed by DB row order,
 // so it's fixed here rather than left to whatever SQLite happens to return.
-const DATE_TYPE_ORDER = ["commencement", "expiration", "renewal_notice_deadline", "next_escalation"];
+const DATE_TYPE_ORDER = CRITICAL_DATE_TYPES;
 const FLAG_TYPE_ORDER = ["early_termination", "co_tenancy", "assignment_consent", "percentage_rent"];
 
-function byCanonicalOrder<T>(order: string[], keyOf: (item: T) => string) {
+function byCanonicalOrder<T>(order: readonly string[], keyOf: (item: T) => string) {
   return (a: T, b: T) => order.indexOf(keyOf(a)) - order.indexOf(keyOf(b));
 }
 

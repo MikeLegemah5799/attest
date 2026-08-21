@@ -1,0 +1,95 @@
+{
+  "slug": "radiant-systems-centreport-fort-worth",
+  "labels": [
+    {
+      "fieldKey": "landlord_name",
+      "expectedValue": "CentrePort Trinity, Ltd., a Texas limited partnership",
+      "notes": "p.1 (Basic Lease Information) and opening paragraph"
+    },
+    {
+      "fieldKey": "tenant_name",
+      "expectedValue": "Radiant Systems, Inc., a Georgia corporation",
+      "notes": "p.1 (Basic Lease Information) and opening paragraph"
+    },
+    {
+      "fieldKey": "premises_address",
+      "expectedValue": "CentrePort Office Center Building B, 14770 Trinity Blvd., Ft. Worth, Texas 76155",
+      "notes": "p.1, Basic Lease Information, \"Premises\" line"
+    },
+    {
+      "fieldKey": "rentable_square_feet",
+      "expectedValue": "68,511",
+      "notes": "p.1, Basic Lease Information — combines the 60,000-rsf \"Initial Premises\" and the 8,511-rsf \"Must Take Space\" (a second area with its own later commencement date, both part of the same Premises)."
+    },
+    {
+      "fieldKey": "commencement_date",
+      "expectedValue": "The earliest of: (a) the date Tenant occupies any portion of the Premises and begins conducting business there, or (b) the first business day of the week following Substantial Completion of Landlord's Work (Exhibit D) — but in no event earlier than January 1, 2006. No fixed calendar date is stated in the Lease itself.",
+      "notes": "p.1-2, Basic Lease Information, \"Initial Premises Commencement Date\" line. Conditional, like eloan-metro-square-jacksonville — commencement_date/expiration_date/next_escalation derived-date types are deliberately not gold-labeled for this document."
+    },
+    {
+      "fieldKey": "expiration_date",
+      "expectedValue": "5:00 p.m. local time on the last day of the 126th full calendar month following the Initial Premises Commencement Date. No fixed calendar date is stated in the Lease itself.",
+      "notes": "p.1, Basic Lease Information, \"Term\" line — same conditional-commencement caveat as commencement_date"
+    },
+    {
+      "fieldKey": "initial_term_length",
+      "expectedValue": "Approximately one hundred twenty-six (126) months",
+      "notes": "p.1, Basic Lease Information, \"Term\" line"
+    },
+    {
+      "fieldKey": "base_rent",
+      "expectedValue": "$0.00/month for Lease Months 1-6 (free rent); $16.06/rsf/year ($80,300.00/month) for Months 7-24; $16.06/rsf/year ($91,690.55/month) for Months 25-66 (the higher monthly figure reflects the Must Take Space coming online in month 25, not a rate change); $17.26/rsf/year ($98,541.65/month) for Months 67-126.",
+      "notes": "p.1, Basic Lease Information, Base Rent table"
+    },
+    {
+      "fieldKey": "escalation_type",
+      "expectedValue": "Fixed step-rate schedule by Lease Month, not a percentage escalation",
+      "notes": "p.1, Basic Lease Information, Base Rent table"
+    },
+    {
+      "fieldKey": "escalation_schedule",
+      "expectedValue": "Rate steps from $0.00 (Months 1-6) to $16.06/rsf/year (Months 7-66) to $17.26/rsf/year (Months 67-126) — see the Base Rent table for the exact monthly dollar amounts at each step.",
+      "notes": "p.1, Basic Lease Information, Base Rent table — same source as base_rent"
+    },
+    {
+      "fieldKey": "renewal_option_terms",
+      "expectedValue": "One additional five (5) year Renewal Option at the \"Prevailing Rental Rate\" (fair-market rate for comparable Centreport-submarket space) — determined by Landlord's notice, a Tenant objection window, and (if unresolved) a binding three-appraiser process. Tenant takes the Premises as-is with no further allowances, and gets no further renewal option unless separately granted in writing.",
+      "notes": "p.I-1 to I-2, Exhibit I"
+    },
+    {
+      "fieldKey": "renewal_notice_deadline",
+      "expectedValue": "Not earlier than twelve (12) months nor later than nine (9) months before expiration of the Term",
+      "notes": "p.I-1, Exhibit I. A window, not a single deadline — both bounds matter (too-early notice is as ineffective as too-late)."
+    },
+    {
+      "fieldKey": "expense_structure",
+      "expectedValue": "Modified gross with a calendar-year-2006 Base Year stop — Tenant pays Additional Rent equal to the excess of annual Operating Costs per rentable square foot over the Base Year amount, with controllable Operating Costs capped at a 6% year-over-year increase (Uncontrollable Expenses — utilities, insurance, real estate taxes, and similar — are excluded from that cap). Taxes and Insurance are separately passed through above their own Base Year amounts, with a gross-up provision.",
+      "notes": "p.C-1, Exhibit C, Sections 1 (Additional Rent/Operating Costs), 2 (Taxes), 3 (Insurance), 6 (Gross-Up)"
+    },
+    {
+      "fieldKey": "security_deposit",
+      "expectedValue": "$91,690.55, payable as cash or a letter of credit",
+      "notes": "p.1, Basic Lease Information, \"Security Deposit\" line"
+    },
+    {
+      "fieldKey": "early_termination_right",
+      "expectedValue": "Yes, in two circumstances: (1) Condemnation — the Lease terminates automatically on a full Taking of the Building/Premises; Tenant may terminate on a partial Taking that denies use of the Premises for 180+ days, cuts remaining parking below 80% of its prior level, or eliminates all access; Landlord may terminate on a material partial Taking, conditioned on also terminating every other terminable lease in the Building. (2) Casualty — Tenant may terminate if Landlord estimates repairs will exceed 180 days, or if repair proceeds prove inadequate and Landlord won't fund the shortfall; Landlord may terminate if repairs are estimated to exceed 180 days, damage exceeds 50% of replacement cost during the Lease's final year, restoration would cost $500,000+ and is uneconomical, or a mortgagee requires the insurance proceeds (also conditioned on terminating every other terminable lease in the Building).",
+      "notes": "p.20, Section 14 (Condemnation); p.21-22, Section 15 (Fire or Other Casualty)"
+    },
+    {
+      "fieldKey": "co_tenancy_clause",
+      "expectedValue": "Not present — the Lease contains no co-tenancy clause.",
+      "notes": "Confirmed by full-text search — no occurrence of \"co-tenancy\" or equivalent language."
+    },
+    {
+      "fieldKey": "assignment_subletting_consent",
+      "expectedValue": "Yes — Landlord's prior written consent is required for any Transfer (assignment, sublease, control-changing ownership transfer, license, or occupancy grant), not to be unreasonably withheld, conditioned, or delayed, subject to detailed creditworthiness/reputation/use consent standards, a $500.00 review fee, and up to $2,500.00 in Landlord's attorneys' fees. A collateral loan assignment isn't a Transfer, and Section 10(h) Permitted Transfers (not itself excerpted here in detail) carries its own affiliate/merger exceptions.",
+      "notes": "p.13-14, Section 10(a)-(d)"
+    },
+    {
+      "fieldKey": "percentage_rent_clause",
+      "expectedValue": "Not present — rent is Base Rent plus Additional Rent/Taxes/Insurance pass-throughs only; no percentage-of-sales rent component.",
+      "notes": "Confirmed by full-text search — no occurrence of \"percentage rent\" or equivalent language."
+    }
+  ]
+}
